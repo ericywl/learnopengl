@@ -1,4 +1,5 @@
 #include <core/input.h>
+#include <core/time.h>
 #include <core/window.h>
 #include <renderer/ibo.h>
 #include <renderer/renderer.h>
@@ -11,16 +12,16 @@
 
 int main() {
     InputSystem input(std::vector<Key>{Key::Esc});
-    Window display(800, 600, "LearnOpenGL");
-    display.SetVSync(true);
-    display.AddInputSystem(input, "kb");
+    Window window(800, 600, "LearnOpenGL");
+    window.SetVSync(true);
+    window.AddInputSystem(input, "kb");
 
     float vertices[] = {
         // positions        // colors         // texture coords
-        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 2.0f, 2.0f,  // top right
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 2.0f, 0.0f,  // bottom right
+        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top right
+        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
         -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom left
-        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 2.0f   // top left
+        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // top left
     };
 
     unsigned int indices[] = {
@@ -40,10 +41,11 @@ int main() {
     VertexArray va;
     va.AddBuffer(vb, layout);
 
+    // Initialize shader
     Shader shader("data/shaders/basic.vert", "data/shaders/basic.frag");
     shader.Bind();
-    // shader.SetUniform4f("u_Color", 1.0f, 0.5f, 0.2f, 1.0f);
 
+    // Initialize and set texture in shader
     TextureOptions texOpts = {
         TextureMinFilter::Nearest,
         TextureMaxFilter::Nearest,
@@ -60,19 +62,36 @@ int main() {
     Renderer renderer;
     renderer.SetLineMode(false);
     renderer.SetBlending(false);
+    renderer.SetClearColor(Color{0.2f, 0.3f, 0.6f, 1.0f});
 
     // Rendering loop
-    while (!display.ShouldClose()) {
+    while (!window.ShouldClose()) {
+        // Clear screen
+        renderer.Clear();
         if (input.IsKeyPressed(Key::Esc)) {
-            display.Close();
+            window.Close();
         }
 
-        renderer.Clear();
+        // Model matrix
+        glm::mat4 trans = glm::mat4(1.0f);
+        trans = glm::rotate(trans, (float)Time::GetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
+        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
+        shader.SetUniformMatrix4fv("u_Model", glm::value_ptr(trans));
+
+        // Draw elements
+        renderer.Draw(va, ib);
+
+        // Set new model matrix
+        trans = glm::mat4(1.0f);
+        trans = glm::scale(trans, glm::vec3(glm::sin(Time::GetTime())));
+        shader.SetUniformMatrix4fv("u_Model", glm::value_ptr(trans));
+
+        // Draw same elements with different model matrix
         renderer.Draw(va, ib);
 
         // Swap buffers and check events
-        display.SwapBuffers();
-        display.PollEvents();
+        window.SwapBuffers();
+        window.PollEvents();
     }
 
     return 0;

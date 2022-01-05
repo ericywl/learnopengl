@@ -169,11 +169,16 @@ void Window::AddInputSystem(InputSystem &is, const std::string &name) {
     m_InputSystems[name] = &is;
 
     if (notInitYet) {
+        // Only set this user pointer and callback once
         glfwSetWindowUserPointer(static_cast<GLFWwindow *>(m_Window), this);
+
+        // Callback function for key action
         auto func = [](GLFWwindow *w, int key, int scancode, int action, int mods) {
+            // Get all input systems that belong to the window
             std::map<std::string, InputSystem *> inputSystems =
                 static_cast<Window *>(glfwGetWindowUserPointer(w))->GetInputSystems();
 
+            // Add key registry into input system
             std::map<std::string, InputSystem *>::iterator it;
             for (it = inputSystems.begin(); it != inputSystems.end(); it++) {
                 if (it->second) {
@@ -182,6 +187,7 @@ void Window::AddInputSystem(InputSystem &is, const std::string &name) {
             }
         };
 
+        // Set callback
         glfwSetKeyCallback(static_cast<GLFWwindow *>(m_Window), func);
     }
 }
