@@ -2,42 +2,119 @@
 
 InputInst Input::s_Instance;
 
-bool Input::IsKeyPressed(Key key, ModifierBits mods) {
-    std::map<Key, InputRegistry>::iterator it = s_Instance.m_KeysReg.find(key);
-    if (it == s_Instance.m_KeysReg.end()) {
+bool Input::AreModifiersPressed(ModifierBits mods) {
+    if ((mods & ALL_SUPPORTED_MODIFIER_BITS) == ModifierBits::None) {
         return false;
     }
 
-    InputRegistry keyReg = s_Instance.m_KeysReg[key];
-    bool keyPressed = keyReg.Action != Action::Release;
-    if (mods != ModifierBits::None) {
-        keyPressed = keyPressed && ((keyReg.Modifiers & mods) != ModifierBits::None);
+    bool pressed = true;
+    if ((mods & ModifierBits::Shift) != ModifierBits::None) {
+        pressed = pressed && (IsKeyPressed(Key::LShift) || IsKeyPressed(Key::RShift));
+    }
+    if ((mods & ModifierBits::Ctrl) != ModifierBits::None) {
+        pressed = pressed && (IsKeyPressed(Key::LCtrl) || IsKeyPressed(Key::RCtrl));
+    }
+    if ((mods & ModifierBits::Alt) != ModifierBits::None) {
+        pressed = pressed && (IsKeyPressed(Key::LAlt) || IsKeyPressed(Key::RAlt));
     }
 
-    return keyPressed;
+    return pressed;
+}
+
+bool Input::IsKeyPressed(Key key, ModifierBits mods) {
+    if (key <= Key::Unknown || key >= Key::Last) {
+        throw std::runtime_error("Invalid key pressed");
+    }
+
+    bool pressed = s_Instance.m_KeyPressed[(int)key];
+    if (!pressed) {
+        return false;
+    }
+
+    if (mods != ModifierBits::None) {
+        return AreModifiersPressed(mods);
+    }
+
+    return true;
+}
+
+bool Input::IsKeyJustPressed(Key key, ModifierBits mods) {
+    if (key <= Key::Unknown || key >= Key::Last) {
+        throw std::runtime_error("Invalid key pressed");
+    }
+
+    bool pressed = s_Instance.m_KeyJustPressed[(int)key];
+    if (!pressed) {
+        return false;
+    }
+
+    if (mods != ModifierBits::None) {
+        return AreModifiersPressed(mods);
+    }
+
+    return true;
 }
 
 bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBits mods) {
-    std::map<MouseButton, InputRegistry>::iterator it = s_Instance.m_MouseButtonsReg.find(mb);
-    if (it == s_Instance.m_MouseButtonsReg.end()) {
+    if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
+        throw std::runtime_error("Invalid mouse button pressed");
+    }
+
+    bool pressed = s_Instance.m_MouseButtonPressed[(int)mb];
+    if (!pressed) {
         return false;
     }
 
-    InputRegistry mbReg = s_Instance.m_MouseButtonsReg[mb];
-    bool mbPressed = mbReg.Action != Action::Release;
     if (mods != ModifierBits::None) {
-        mbPressed = mbPressed && ((mbReg.Modifiers & mods) != ModifierBits::None);
+        return AreModifiersPressed(mods);
     }
 
-    return mbPressed;
+    return true;
+}
+
+bool Input::IsMouseButtonJustPressed(MouseButton mb, ModifierBits mods) {
+    if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
+        throw std::runtime_error("Invalid mouse button pressed");
+    }
+
+    bool pressed = s_Instance.m_MouseButtonJustPressed[(int)mb];
+    if (!pressed) {
+        return false;
+    }
+
+    if (mods != ModifierBits::None) {
+        return AreModifiersPressed(mods);
+    }
+
+    return true;
 }
 
 void Input::AddKeyRegistry(Key key, Action action, ModifierBits mods) {
-    s_Instance.m_KeysReg[key] = {action, mods};
+    if (key <= Key::Unknown || key >= Key::Last) {
+        return;
+    }
+
+    if (action == Action::Press) {
+        s_Instance.m_KeyPressed[(int)key] = true;
+        s_Instance.m_KeyJustPressed[(int)key] = true;
+    } else if (action == Action::Release) {
+        s_Instance.m_KeyPressed[(int)key] = false;
+        s_Instance.m_KeyJustPressed[(int)key] = false;
+    }
 }
 
 void Input::AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBits mods) {
-    s_Instance.m_MouseButtonsReg[mb] = {action, mods};
+    if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
+        return;
+    }
+
+    if (action == Action::Press) {
+        s_Instance.m_MouseButtonPressed[(int)mb] = true;
+        s_Instance.m_MouseButtonJustPressed[(int)mb] = true;
+    } else if (action == Action::Release) {
+        s_Instance.m_MouseButtonPressed[(int)mb] = false;
+        s_Instance.m_MouseButtonJustPressed[(int)mb] = false;
+    }
 }
 
 void Input::AddMousePositionRegistry(float x, float y) {

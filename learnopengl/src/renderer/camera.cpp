@@ -69,10 +69,11 @@ void Camera::ProcessZoom(float offset) {
 
 void Camera::updateCameraVectors() {
     // Calculate camera's front vector
-    glm::vec3 front;
-    front.x = cos(glm::radians(m_Options.Yaw)) * cos(glm::radians(m_Options.Pitch));
-    front.y = sin(glm::radians(m_Options.Pitch));
-    front.z = sin(glm::radians(m_Options.Yaw)) * cos(glm::radians(m_Options.Pitch));
+    glm::vec3 front{
+        cos(glm::radians(m_Options.Yaw)) * cos(glm::radians(m_Options.Pitch)),
+        sin(glm::radians(m_Options.Pitch)),
+        sin(glm::radians(m_Options.Yaw)) * cos(glm::radians(m_Options.Pitch)),
+    };
     m_Front = glm::normalize(front);
 
     // Recalculate up and right vector

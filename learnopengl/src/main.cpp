@@ -1,6 +1,6 @@
+#include <core/application.h>
 #include <core/input.h>
 #include <core/time.h>
-#include <core/window.h>
 #include <renderer/camera.h>
 #include <renderer/ibo.h>
 #include <renderer/renderer.h>
@@ -11,10 +11,13 @@
 
 #include <iterator>
 
+#define DEBUG
+
 const unsigned int SCREEN_WIDTH = 800;
 const unsigned int SCREEN_HEIGHT = 600;
+const double TARGET_FPS = 60.0;
 
-void processCameraInputs(Camera &camera, float deltaTime) {
+void processCameraInputs(Camera& camera, float deltaTime) {
     // WASD to control camera movement
     if (Input::IsKeyPressed(Key::W)) {
         camera.ProcessMovement(CameraMovement::Forward, deltaTime);
@@ -39,11 +42,28 @@ void processCameraInputs(Camera &camera, float deltaTime) {
     }
 }
 
+void processWindowInputs(Window& window) {
+    // Check for window close triggers
+    if (Input::IsKeyPressed(Key::Esc)) {
+        window.Close();
+    }
+
+    // Fullscreen toggle
+    if (Input::IsKeyJustPressed(Key::Enter, ModifierBits::Alt)) {
+        window.ToggleFullScreen();
+    }
+}
+
 int main() {
+#ifdef DEBUG
+    spdlog::set_level(spdlog::level::debug);
+#endif
+
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Window window(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
     window.SetVSync(true);
-    window.StartInputSystem();
+    window.SetInputSystem(true);
 
     // Cube vertices with 3 position and 2 texture coordinates
     // clang-format off
@@ -138,17 +158,24 @@ int main() {
 
     // Camera
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
-    float deltaTime = 0.0f;  // Time between current frame and last frame
-    float lastFrame = 0.0f;  // Time of last frame
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+    double lastTimeF = Time::GetTime();
+    int nbFrames = 0;
 
     // Rendering loop
     while (!window.ShouldClose()) {
         // Clear screen
         renderer.Clear();
+        processWindowInputs(window);
 
-        // Check for window close triggers
-        if (Input::IsKeyPressed(Key::Esc)) {
-            window.Close();
+        // Framerate calculation
+        double currentTime = Time::GetTime();
+        nbFrames++;
+        if (currentTime - lastTimeF >= 1.0) {
+            spdlog::debug("{} ms/frame, {} fps", 1000.0 / double(nbFrames), nbFrames);
+            nbFrames = 0;
+            lastTimeF += 1.0;
         }
 
         // Projection matrix
@@ -156,10 +183,9 @@ int main() {
         shader.SetUniformMatrix4fv("u_Projection", glm::value_ptr(projection));
 
         // View matrix (reverse direction of where camera moves)
-        float currentFrame = Time::GetTime();
-        deltaTime = currentFrame - lastFrame;
-        lastFrame = currentFrame;
-        processCameraInputs(camera, deltaTime);
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+        processCameraInputs(camera, (float)deltaTime);
         glm::mat4 view = camera.ViewMatrix();
         shader.SetUniformMatrix4fv("u_View", glm::value_ptr(view));
 
