@@ -233,9 +233,8 @@ int main() {
                 model = glm::translate(model, cubePositions[i]);
                 float angle = 20.0f * (i + 1);
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-                glm::mat4 invModel = glm::inverseTranspose(model);
                 objShader.SetUniformMatrix4f("u_Model", model);
-                objShader.SetUniformMatrix4f("u_InvTModel", invModel);
+                objShader.SetUniformMatrix4f("u_InvTModelView", glm::inverseTranspose(view * model));
 
                 // Draw elements
                 renderer.Draw(objVA, objIB);
