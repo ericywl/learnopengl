@@ -1,22 +1,14 @@
 #include <core/input.h>
 
-InputSystem::InputSystem(const std::vector<Key> keysToMonitor) : m_Enabled(false) {
-    for (Key k : keysToMonitor) {
-        m_KeysReg[k] = {Action::Release, ModifierBits::None};
-    }
-}
+InputInst Input::s_Instance;
 
-const bool InputSystem::IsKeyPressed(Key key, ModifierBits mods) {
-    if (!m_Enabled) {
+bool Input::IsKeyPressed(Key key, ModifierBits mods) {
+    std::map<Key, InputRegistry>::iterator it = s_Instance.m_KeysReg.find(key);
+    if (it == s_Instance.m_KeysReg.end()) {
         return false;
     }
 
-    std::map<Key, KeyRegistry>::iterator it = m_KeysReg.find(key);
-    if (it == m_KeysReg.end()) {
-        return false;
-    }
-
-    KeyRegistry keyReg = m_KeysReg[key];
+    InputRegistry keyReg = s_Instance.m_KeysReg[key];
     bool keyPressed = keyReg.Action != Action::Release;
     if (mods != ModifierBits::None) {
         keyPressed = keyPressed && ((keyReg.Modifiers & mods) != ModifierBits::None);
@@ -25,11 +17,39 @@ const bool InputSystem::IsKeyPressed(Key key, ModifierBits mods) {
     return keyPressed;
 }
 
-void InputSystem::AddKeyRegistry(Key key, Action action, ModifierBits mods) {
-    std::map<Key, KeyRegistry>::iterator it = m_KeysReg.find(key);
-    if (it == m_KeysReg.end()) {
-        return;
+bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBits mods) {
+    std::map<MouseButton, InputRegistry>::iterator it = s_Instance.m_MouseButtonsReg.find(mb);
+    if (it == s_Instance.m_MouseButtonsReg.end()) {
+        return false;
     }
 
-    m_KeysReg[key] = {action, mods};
+    InputRegistry mbReg = s_Instance.m_MouseButtonsReg[mb];
+    bool mbPressed = mbReg.Action != Action::Release;
+    if (mods != ModifierBits::None) {
+        mbPressed = mbPressed && ((mbReg.Modifiers & mods) != ModifierBits::None);
+    }
+
+    return mbPressed;
+}
+
+void Input::AddKeyRegistry(Key key, Action action, ModifierBits mods) {
+    s_Instance.m_KeysReg[key] = {action, mods};
+}
+
+void Input::AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBits mods) {
+    s_Instance.m_MouseButtonsReg[mb] = {action, mods};
+}
+
+void Input::AddMousePositionRegistry(float x, float y) {
+    if (s_Instance.m_FirstMouse) {
+        s_Instance.m_MouseLastPos = {x, y};
+        s_Instance.m_FirstMouse = false;
+    }
+
+    s_Instance.m_MousePosDelta = {x - s_Instance.m_MouseLastPos.first, s_Instance.m_MouseLastPos.second - y};
+    s_Instance.m_MouseLastPos = {x, y};
+}
+
+void Input::AddMouseScrollRegistry(float xOffset, float yOffset) {
+    s_Instance.m_MouseScrollDelta = {xOffset, yOffset};
 }

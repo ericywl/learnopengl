@@ -1,6 +1,7 @@
 #include <core/input.h>
 #include <core/time.h>
 #include <core/window.h>
+#include <renderer/camera.h>
 #include <renderer/ibo.h>
 #include <renderer/renderer.h>
 #include <renderer/shader.h>
@@ -10,32 +11,95 @@
 
 #include <iterator>
 
+const unsigned int SCREEN_WIDTH = 800;
+const unsigned int SCREEN_HEIGHT = 600;
+
+void processCameraInputs(Camera &camera, float deltaTime) {
+    // WASD to control camera movement
+    if (Input::IsKeyPressed(Key::W)) {
+        camera.ProcessMovement(CameraMovement::Forward, deltaTime);
+    }
+    if (Input::IsKeyPressed(Key::S)) {
+        camera.ProcessMovement(CameraMovement::Backward, deltaTime);
+    }
+    if (Input::IsKeyPressed(Key::A)) {
+        camera.ProcessMovement(CameraMovement::Left, deltaTime);
+    }
+    if (Input::IsKeyPressed(Key::D)) {
+        camera.ProcessMovement(CameraMovement::Right, deltaTime);
+    }
+
+    // Y-axis scroll to control camera zoom
+    camera.ProcessZoom(Input::GetMouseScrollDelta().second);
+
+    // Mouse movement to control camera rotation
+    if (Input::IsMouseButtonPressed(MouseButton::Left)) {
+        std::pair<float, float> mouseOffset = Input::GetMousePositionDelta();
+        camera.ProcessRotation(-mouseOffset.first, -mouseOffset.second);
+    }
+}
+
 int main() {
-    InputSystem input(std::vector<Key>{Key::Esc});
-    Window window(800, 600, "LearnOpenGL");
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Window window(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     window.SetVSync(true);
-    window.AddInputSystem(input, "kb");
+    window.StartInputSystem();
 
+    // Cube vertices with 3 position and 2 texture coordinates
+    // clang-format off
     float vertices[] = {
-        // positions        // colors         // texture coords
-        0.5f,  0.5f,  0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f,  // top right
-        0.5f,  -0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,  // bottom left
-        -0.5f, 0.5f,  0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 1.0f   // top left
-    };
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-    unsigned int indices[] = {
-        // note that we start from 0!
-        0, 1, 3,  // first triangle
-        1, 2, 3   // second triangle
-    };
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	};
+    // clang-format on
+
+    unsigned int indices[] = {0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  10, 11, 12, 13, 14, 15, 16, 17,
+                              18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
 
     VertexBuffer vb(vertices, (unsigned int)sizeof(vertices));
     IndexBuffer ib(indices, (unsigned int)std::size(indices));
 
     VertexBufferLayout layout;
     layout.Push<float>(3);  // positions
-    layout.Push<float>(3);  // colors
     layout.Push<float>(2);  // texture coords
 
     VertexArray va;
@@ -60,34 +124,56 @@ int main() {
     shader.SetUniform1i("u_Texture2", 1);
 
     Renderer renderer;
+    renderer.SetDepthTest(true);
     renderer.SetLineMode(false);
     renderer.SetBlending(false);
     renderer.SetClearColor(Color{0.2f, 0.3f, 0.6f, 1.0f});
+
+    glm::vec3 cubeTranslations[] = {
+        glm::vec3(0.0f, 0.0f, 0.0f),     glm::vec3(2.0f, 5.0f, -15.0f), glm::vec3(-1.5f, -2.2f, -2.5f),
+        glm::vec3(-3.8f, -2.0f, -12.3f), glm::vec3(2.4f, -0.4f, -3.5f), glm::vec3(-1.7f, 3.0f, -7.5f),
+        glm::vec3(1.3f, -2.0f, -2.5f),   glm::vec3(1.5f, 2.0f, -2.5f),  glm::vec3(1.5f, 0.2f, -1.5f),
+        glm::vec3(-1.3f, 1.0f, -1.5f),
+    };
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    float deltaTime = 0.0f;  // Time between current frame and last frame
+    float lastFrame = 0.0f;  // Time of last frame
 
     // Rendering loop
     while (!window.ShouldClose()) {
         // Clear screen
         renderer.Clear();
-        if (input.IsKeyPressed(Key::Esc)) {
+
+        // Check for window close triggers
+        if (Input::IsKeyPressed(Key::Esc)) {
             window.Close();
         }
 
-        // Model matrix
-        glm::mat4 trans = glm::mat4(1.0f);
-        trans = glm::rotate(trans, (float)Time::GetTime(), glm::vec3(0.0f, 0.0f, 1.0f));
-        trans = glm::translate(trans, glm::vec3(0.5f, -0.5f, 0.0f));
-        shader.SetUniformMatrix4fv("u_Model", glm::value_ptr(trans));
+        // Projection matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+        shader.SetUniformMatrix4fv("u_Projection", glm::value_ptr(projection));
 
-        // Draw elements
-        renderer.Draw(va, ib);
+        // View matrix (reverse direction of where camera moves)
+        float currentFrame = Time::GetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+        processCameraInputs(camera, deltaTime);
+        glm::mat4 view = camera.ViewMatrix();
+        shader.SetUniformMatrix4fv("u_View", glm::value_ptr(view));
 
-        // Set new model matrix
-        trans = glm::mat4(1.0f);
-        trans = glm::scale(trans, glm::vec3(glm::sin(Time::GetTime())));
-        shader.SetUniformMatrix4fv("u_Model", glm::value_ptr(trans));
+        for (unsigned int i = 0; i < 10; i++) {
+            // Model matrix
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubeTranslations[i]);
+            float angle = 20.0f * (i + 1);
+            model = glm::rotate(model, (float)Time::GetTime() * glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            shader.SetUniformMatrix4fv("u_Model", glm::value_ptr(model));
 
-        // Draw same elements with different model matrix
-        renderer.Draw(va, ib);
+            // Draw elements
+            renderer.Draw(va, ib);
+        }
 
         // Swap buffers and check events
         window.SwapBuffers();

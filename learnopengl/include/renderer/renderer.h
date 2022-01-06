@@ -13,4 +13,5 @@ class Renderer {
     void SetClearColor(const Color& color) const;
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
+    void SetDepthTest(bool on) const;
 };

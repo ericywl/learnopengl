@@ -3,8 +3,8 @@
 #include <fstream>
 #include <sstream>
 
-/* ParseShader parses the shader source code from the filepath */
-const std::string Shader::ParseShader(const std::string &filePath) {
+/* parseShader parses the shader source code from the filepath */
+const std::string Shader::parseShader(const std::string &filePath) {
     std::ifstream stream(filePath);
     if (stream.fail()) {
         spdlog::error("[Shader Error] Shader file '{}' does not exist", filePath);
@@ -20,8 +20,8 @@ const std::string Shader::ParseShader(const std::string &filePath) {
     return ss.str();
 }
 
-/* CompileShader compiles the shader based on type from the provided source string and returns the ID */
-unsigned int Shader::CompileShader(const unsigned int type, const std::string &sourceVal) {
+/* compileShader compiles the shader based on type from the provided source string and returns the ID */
+unsigned int Shader::compileShader(const unsigned int type, const std::string &sourceVal) {
     unsigned int id = glCreateShader(type);
     const char *src = sourceVal.c_str();
     glShaderSource(id, 1, &src, nullptr);
@@ -43,7 +43,7 @@ unsigned int Shader::CompileShader(const unsigned int type, const std::string &s
     return id;
 }
 
-unsigned int Shader::CreateProgram(unsigned int vertexShader, unsigned int fragmentShader) {
+unsigned int Shader::createProgram(unsigned int vertexShader, unsigned int fragmentShader) {
     unsigned int program = glCreateProgram();
 
     glAttachShader(program, vertexShader);
@@ -80,11 +80,11 @@ unsigned int Shader::CreateProgram(unsigned int vertexShader, unsigned int fragm
 /* Shader compiles the shaders from provided sources and links it to a program */
 Shader::Shader(const std::string &vertexFilePath, const std::string &fragmentFilePath) : m_ReferenceID(0) {
     // Parse and compile each shader
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, Shader::ParseShader(vertexFilePath));
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, Shader::ParseShader(fragmentFilePath));
+    unsigned int vs = compileShader(GL_VERTEX_SHADER, Shader::parseShader(vertexFilePath));
+    unsigned int fs = compileShader(GL_FRAGMENT_SHADER, Shader::parseShader(fragmentFilePath));
 
     // Create shader program
-    unsigned int program = CreateProgram(vs, fs);
+    unsigned int program = createProgram(vs, fs);
 
     // We can clear shader intermediates after linking them to program
     glDeleteShader(vs);
@@ -106,22 +106,22 @@ void Shader::Unbind() const {
 }
 
 void Shader::SetUniform1f(const std::string &name, float value) {
-    glUniform1f(GetUniformLocation(name), value);
+    glUniform1f(getUniformLocation(name), value);
 }
 
 void Shader::SetUniform1i(const std::string &name, int value) {
-    glUniform1i(GetUniformLocation(name), value);
+    glUniform1i(getUniformLocation(name), value);
 }
 
 void Shader::SetUniform4f(const std::string &name, float v0, float v1, float v2, float v3) {
-    glUniform4f(GetUniformLocation(name), v0, v1, v2, v3);
+    glUniform4f(getUniformLocation(name), v0, v1, v2, v3);
 }
 
 void Shader::SetUniformMatrix4fv(const std::string &name, const float *value) {
-    glUniformMatrix4fv(GetUniformLocation(name), 1, GL_FALSE, value);
+    glUniformMatrix4fv(getUniformLocation(name), 1, GL_FALSE, value);
 }
 
-int Shader::GetUniformLocation(const std::string &name) {
+int Shader::getUniformLocation(const std::string &name) {
     if (m_UniformLocationCache.find(name) != m_UniformLocationCache.end()) {
         return m_UniformLocationCache[name];
     }

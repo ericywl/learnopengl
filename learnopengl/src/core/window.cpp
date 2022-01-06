@@ -135,24 +135,25 @@ Window::Window(const int width, const int height, const std::string &name) : m_W
 }
 
 Window::~Window() {
-    glfwDestroyWindow(static_cast<GLFWwindow *>(m_Window));
+    glfwDestroyWindow(m_Window);
     glfwTerminate();
 }
 
 bool Window::ShouldClose() const {
-    return glfwWindowShouldClose(static_cast<GLFWwindow *>(m_Window));
+    return glfwWindowShouldClose(m_Window);
 }
 
 void Window::SwapBuffers() const {
-    glfwSwapBuffers(static_cast<GLFWwindow *>(m_Window));
+    glfwSwapBuffers(m_Window);
 }
 
 void Window::PollEvents() const {
+    Input::FrameReset();
     glfwPollEvents();
 }
 
 void Window::Close() const {
-    glfwSetWindowShouldClose(static_cast<GLFWwindow *>(m_Window), GL_TRUE);
+    glfwSetWindowShouldClose(m_Window, GL_TRUE);
 }
 
 void Window::SetVSync(bool on) const {
@@ -163,40 +164,9 @@ void Window::SetVSync(bool on) const {
     }
 }
 
-void Window::AddInputSystem(InputSystem &is, const std::string &name) {
-    bool notInitYet = m_InputSystems.empty();
-    is.SetEnabled(true);
-    m_InputSystems[name] = &is;
-
-    if (notInitYet) {
-        // Only set this user pointer and callback once
-        glfwSetWindowUserPointer(static_cast<GLFWwindow *>(m_Window), this);
-
-        // Callback function for key action
-        auto func = [](GLFWwindow *w, int key, int scancode, int action, int mods) {
-            // Get all input systems that belong to the window
-            std::map<std::string, InputSystem *> inputSystems =
-                static_cast<Window *>(glfwGetWindowUserPointer(w))->GetInputSystems();
-
-            // Add key registry into input system
-            std::map<std::string, InputSystem *>::iterator it;
-            for (it = inputSystems.begin(); it != inputSystems.end(); it++) {
-                if (it->second) {
-                    it->second->AddKeyRegistry(Key(key), Action(action), ModifierBits(mods));
-                }
-            }
-        };
-
-        // Set callback
-        glfwSetKeyCallback(static_cast<GLFWwindow *>(m_Window), func);
-    }
-}
-
-InputSystem *Window::GetInputSystem(const std::string &name) {
-    std::map<std::string, InputSystem *>::iterator it = m_InputSystems.find(name);
-    if (it == m_InputSystems.end()) {
-        return nullptr;
-    }
-
-    return m_InputSystems[name];
+void Window::StartInputSystem() {
+    glfwSetKeyCallback(m_Window, Input::KeyCallback);
+    glfwSetMouseButtonCallback(m_Window, Input::MouseButtonCallback);
+    glfwSetCursorPosCallback(m_Window, Input::MousePositionCallback);
+    glfwSetScrollCallback(m_Window, Input::MouseScrollCallback);
 }

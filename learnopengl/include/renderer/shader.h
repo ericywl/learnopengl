@@ -23,8 +23,8 @@ class Shader {
     void SetUniformMatrix4fv(const std::string &name, const float *value);
 
    private:
-    int GetUniformLocation(const std::string &name);
-    const std::string ParseShader(const std::string &filepath);
-    unsigned int CompileShader(const unsigned int type, const std::string &sourceVal);
-    unsigned int CreateProgram(unsigned int vertexShader, unsigned int fragmentShader);
+    int getUniformLocation(const std::string &name);
+    const std::string parseShader(const std::string &filepath);
+    unsigned int compileShader(const unsigned int type, const std::string &sourceVal);
+    unsigned int createProgram(unsigned int vertexShader, unsigned int fragmentShader);
 };
