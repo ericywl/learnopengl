@@ -19,8 +19,10 @@ class Shader {
 
     void SetUniform1f(const std::string &name, float value);
     void SetUniform1i(const std::string &name, int value);
+    void SetUniform3f(const std::string &name, glm::vec3 value);
     void SetUniform4f(const std::string &name, float v0, float v1, float v2, float v3);
-    void SetUniformMatrix4fv(const std::string &name, const float *value);
+    void SetUniform4f(const std::string &name, glm::vec4 value);
+    void SetUniformMatrix4f(const std::string &name, glm::mat4 value);
 
    private:
     int getUniformLocation(const std::string &name);

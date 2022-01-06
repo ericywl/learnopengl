@@ -1,6 +1,7 @@
 #pragma once
 
 #include <common.h>
+#include <math.h>
 
 const float MAX_ZOOM_LEVEL = 45.0f;
 
@@ -33,6 +34,10 @@ class Camera {
     void ProcessMovement(CameraMovement direction, float deltaTime);
     void ProcessRotation(float xOffset, float yOffset, bool constrainPitch = true);
     void ProcessZoom(float offset);
+
+    inline glm::vec3 GetPosition() const {
+        return m_Position;
+    }
 
     inline float GetZoom() const {
         return m_Options.Zoom;
