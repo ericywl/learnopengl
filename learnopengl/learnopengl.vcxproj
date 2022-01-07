@@ -168,7 +168,11 @@
     <None Include="data\shaders\basic.frag" />
     <None Include=".clang-format" />
     <None Include="data\shaders\basic.vert" />
+    <None Include="data\shaders\gouraud.frag" />
+    <None Include="data\shaders\gouraud.vert" />
     <None Include="data\shaders\light.frag" />
+    <None Include="data\shaders\phong.frag" />
+    <None Include="data\shaders\phong.vert" />
     <None Include="README.md" />
     <None Include="vendor\glm\detail\func_common.inl" />
     <None Include="vendor\glm\detail\func_common_simd.inl" />

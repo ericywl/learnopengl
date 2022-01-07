@@ -472,6 +472,10 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="data\shaders\light.frag" />
+    <None Include="data\shaders\phong.frag" />
+    <None Include="data\shaders\phong.vert" />
+    <None Include="data\shaders\gouraud.frag" />
+    <None Include="data\shaders\gouraud.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\window.h">

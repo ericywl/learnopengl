@@ -65,7 +65,7 @@ int main() {
     window.SetVSync(true);
     window.SetInputSystem(true);
 
-    // Cube vertices with 3 position and 2 texture coordinates
+    // Cube vertices with 3 position, 3 normal and 2 texture coordinates
     // clang-format off
 	float objVertices[] = {
 		-0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f,  0.0f,
@@ -138,30 +138,28 @@ int main() {
     glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
     // Initialize shader
-    Shader objShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    Shader objShader("data/shaders/gouraud.vert", "data/shaders/gouraud.frag");
     Shader lightShader("data/shaders/basic.vert", "data/shaders/light.frag");
 
-    {
-        // Set color uniforms
-        objShader.Bind();
-        objShader.SetUniform4f("u_ObjColor", 1.0f, 0.5f, 0.31f, 1.0f);
-        objShader.SetUniform4f("u_LightColor", 1.0f, 1.0f, 1.0f, 1.0f);
-        objShader.SetUniform4f("u_LightPos", glm::vec4(lightPosition, 1.0f));
+    // Set color uniforms
+    objShader.Bind();
+    objShader.SetUniform4f("u_ObjColor", 1.0f, 0.5f, 0.31f, 1.0f);
+    objShader.SetUniform4f("u_LightColor", 1.0f, 1.0f, 1.0f, 1.0f);
+    objShader.SetUniform4f("u_LightPos", glm::vec4(lightPosition, 1.0f));
 
-        // Initialize and set texture in shader
-        TextureOptions texOpts = {
-            TextureMinFilter::Nearest,
-            TextureMaxFilter::Nearest,
-            TextureWrap::Repeat,
-            TextureWrap::Repeat,
-        };
-        Texture tex1("data/textures/awesomeface.png", texOpts);
-        Texture tex2("data/textures/container.jpg", texOpts);
-        tex1.Bind(0);
-        tex2.Bind(1);
-        objShader.SetUniform1i("u_Texture1", 0);
-        objShader.SetUniform1i("u_Texture2", 1);
-    }
+    // Initialize and set texture in shader
+    TextureOptions texOpts = {
+        TextureMinFilter::Nearest,
+        TextureMaxFilter::Nearest,
+        TextureWrap::Repeat,
+        TextureWrap::Repeat,
+    };
+    Texture tex1("data/textures/awesomeface.png", texOpts);
+    Texture tex2("data/textures/container.jpg", texOpts);
+    tex1.Bind(0);
+    tex2.Bind(1);
+    objShader.SetUniform1i("u_Texture1", 0);
+    objShader.SetUniform1i("u_Texture2", 1);
 
     Renderer renderer;
     renderer.SetDepthTest(true);
@@ -234,7 +232,7 @@ int main() {
                 float angle = 20.0f * (i + 1);
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
                 objShader.SetUniformMatrix4f("u_Model", model);
-                objShader.SetUniformMatrix4f("u_InvTModelView", glm::inverseTranspose(view * model));
+                objShader.SetUniformMatrix4f("u_TrInvModelView", glm::inverseTranspose(view * model));
 
                 // Draw elements
                 renderer.Draw(objVA, objIB);
