@@ -141,11 +141,17 @@ int main() {
     Shader objShader("data/shaders/gouraud.vert", "data/shaders/gouraud.frag");
     Shader lightShader("data/shaders/basic.vert", "data/shaders/light.frag");
 
-    // Set color uniforms
+    // Set light uniforms
     objShader.Bind();
-    objShader.SetUniform4f("u_ObjColor", 1.0f, 0.5f, 0.31f, 1.0f);
-    objShader.SetUniform4f("u_LightColor", 1.0f, 1.0f, 1.0f, 1.0f);
-    objShader.SetUniform4f("u_LightPos", glm::vec4(lightPosition, 1.0f));
+    objShader.SetUniform3f("u_Light.ambient", 0.2f, 0.2f, 0.2f);
+    objShader.SetUniform3f("u_Light.diffuse", 0.5f, 0.5f, 0.5f);
+    objShader.SetUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
+    objShader.SetUniform3f("u_Light.position", lightPosition);
+    // Set object material
+    objShader.SetUniform3f("u_Material.ambient", 1.0f, 0.5f, 0.31f);
+    objShader.SetUniform3f("u_Material.diffuse", 1.0f, 0.5f, 0.31f);
+    objShader.SetUniform3f("u_Material.specular", 0.5f, 0.5f, 0.5f);
+    objShader.SetUniform1f("u_Material.shininess", 32.0f);
 
     // Initialize and set texture in shader
     TextureOptions texOpts = {
@@ -192,6 +198,15 @@ int main() {
             }
         }
 
+        // Calculate light color
+        glm::vec3 lightColor{
+            sin(currentTime * 2.0f),
+            sin(currentTime * 0.7f),
+            sin(currentTime * 1.3f),
+        };
+        glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
+        glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
+
         // Projection matrix
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
 
@@ -206,6 +221,8 @@ int main() {
             lightShader.Bind();
             lightShader.SetUniformMatrix4f("u_Projection", projection);
             lightShader.SetUniformMatrix4f("u_View", view);
+            // Set light uniforms
+            lightShader.SetUniform3f("u_LightColor", lightColor);
 
             lightPosition.x = 1.0f + sin((float)currentTime) * 3.0f;
             lightPosition.y = sin((float)currentTime / 3.0f);
@@ -222,8 +239,11 @@ int main() {
             objShader.Bind();
             objShader.SetUniformMatrix4f("u_Projection", projection);
             objShader.SetUniformMatrix4f("u_View", view);
-            objShader.SetUniform4f("u_ViewPos", glm::vec4(camera.GetPosition(), 1.0f));
-            objShader.SetUniform4f("u_LightPos", glm::vec4(lightPosition, 1.0f));
+            objShader.SetUniform3f("u_ViewPos", camera.GetPosition());
+            // Set light stuff
+            objShader.SetUniform3f("u_Light.position", lightPosition);
+            objShader.SetUniform3f("u_Light.ambient", lightAmbient);
+            objShader.SetUniform3f("u_Light.diffuse", lightDiffuse);
 
             for (unsigned int i = 0; i < 10; i++) {
                 // Model matrix
@@ -232,7 +252,7 @@ int main() {
                 float angle = 20.0f * (i + 1);
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
                 objShader.SetUniformMatrix4f("u_Model", model);
-                objShader.SetUniformMatrix4f("u_TrInvModelView", glm::inverseTranspose(view * model));
+                objShader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
 
                 // Draw elements
                 renderer.Draw(objVA, objIB);
