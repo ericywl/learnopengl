@@ -39,6 +39,10 @@ class Camera {
         return m_Position;
     }
 
+    inline glm::vec3 GetFront() const {
+        return m_Front;
+    }
+
     inline float GetZoom() const {
         return m_Options.Zoom;
     }

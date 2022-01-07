@@ -611,6 +611,8 @@
   <ItemGroup>
     <Image Include="data\textures\awesomeface.png" />
     <Image Include="data\textures\container.jpg" />
+    <Image Include="data\textures\container2.png" />
+    <Image Include="data\textures\container2_specular.png" />
     <Image Include="data\textures\wall.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

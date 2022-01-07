@@ -138,20 +138,8 @@ int main() {
     glm::vec3 lightPosition(1.2f, 1.0f, 2.0f);
 
     // Initialize shader
-    Shader objShader("data/shaders/gouraud.vert", "data/shaders/gouraud.frag");
+    Shader objShader("data/shaders/phong.vert", "data/shaders/phong.frag");
     Shader lightShader("data/shaders/basic.vert", "data/shaders/light.frag");
-
-    // Set light uniforms
-    objShader.Bind();
-    objShader.SetUniform3f("u_Light.ambient", 0.2f, 0.2f, 0.2f);
-    objShader.SetUniform3f("u_Light.diffuse", 0.5f, 0.5f, 0.5f);
-    objShader.SetUniform3f("u_Light.specular", 1.0f, 1.0f, 1.0f);
-    objShader.SetUniform3f("u_Light.position", lightPosition);
-    // Set object material
-    objShader.SetUniform3f("u_Material.ambient", 1.0f, 0.5f, 0.31f);
-    objShader.SetUniform3f("u_Material.diffuse", 1.0f, 0.5f, 0.31f);
-    objShader.SetUniform3f("u_Material.specular", 0.5f, 0.5f, 0.5f);
-    objShader.SetUniform1f("u_Material.shininess", 32.0f);
 
     // Initialize and set texture in shader
     TextureOptions texOpts = {
@@ -160,22 +148,53 @@ int main() {
         TextureWrap::Repeat,
         TextureWrap::Repeat,
     };
-    Texture tex1("data/textures/awesomeface.png", texOpts);
-    Texture tex2("data/textures/container.jpg", texOpts);
+    Texture tex1("data/textures/container2.png", texOpts);
+    Texture tex2("data/textures/container2_specular.png", texOpts);
     tex1.Bind(0);
     tex2.Bind(1);
-    objShader.SetUniform1i("u_Texture1", 0);
-    objShader.SetUniform1i("u_Texture2", 1);
-
-    Renderer renderer;
-    renderer.SetDepthTest(true);
-    renderer.SetLineMode(false);
-    renderer.SetBlending(false);
+    // objShader.SetUniform1i("u_Texture1", 0);
+    // objShader.SetUniform1i("u_Texture2", 1);
 
     // Camera
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
     double deltaTime = 0.0;  // Time between current frame and last frame
     double lastTime = 0.0;   // Time of last frame
+
+    // Set light uniforms for light cube shader
+    lightShader.Bind();
+    lightShader.SetUniform3f("u_LightColor", 1.0f, 1.0f, 1.0f);
+
+    // Set point light uniforms
+    objShader.Bind();
+    objShader.SetUniform3f("u_PtLight.ambient", 0.2f, 0.2f, 0.2f);
+    objShader.SetUniform3f("u_PtLight.diffuse", 0.5f, 0.5f, 0.5f);
+    objShader.SetUniform3f("u_PtLight.specular", 1.0f, 1.0f, 1.0f);
+    objShader.SetUniform3f("u_PtLight.position", lightPosition);
+    objShader.SetUniform1f("u_PtLight.constant", 1.0f);
+    objShader.SetUniform1f("u_PtLight.linear", 0.09f);
+    objShader.SetUniform1f("u_PtLight.quadratic", 0.032f);
+    // Set directional light uniforms
+    objShader.SetUniform3f("u_DirLight.ambient", 0.1f, 0.1f, 0.1f);
+    objShader.SetUniform3f("u_DirLight.diffuse", 0.4f, 0.4f, 0.4f);
+    objShader.SetUniform3f("u_DirLight.specular", 0.6f, 0.6f, 0.6f);
+    objShader.SetUniform3f("u_DirLight.direction", -0.2f, -1.0f, -0.3f);
+    // Set spot light uniforms
+    objShader.SetUniform3f("u_SpLight.ambient", 0.2f, 0.2f, 0.2f);
+    objShader.SetUniform3f("u_SpLight.diffuse", 0.5f, 0.5f, 0.5f);
+    objShader.SetUniform3f("u_SpLight.specular", 1.0f, 1.0f, 1.0f);
+    objShader.SetUniform3f("u_SpLight.position", camera.GetPosition());
+    objShader.SetUniform1f("u_SpLight.constant", 1.0f);
+    objShader.SetUniform1f("u_SpLight.linear", 0.09f);
+    objShader.SetUniform1f("u_SpLight.quadratic", 0.032f);
+    // Set object material (diffuse and specular are texture indices)
+    objShader.SetUniform1f("u_Material.shininess", 32.0f);
+    objShader.SetUniform1i("u_Material.diffuse", 0);
+    objShader.SetUniform1i("u_Material.specular", 1);
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+    renderer.SetLineMode(false);
+    renderer.SetBlending(false);
 
     // Framerate related
     double lastTimeF = Time::GetTime();
@@ -199,13 +218,9 @@ int main() {
         }
 
         // Calculate light color
-        glm::vec3 lightColor{
-            sin(currentTime * 2.0f),
-            sin(currentTime * 0.7f),
-            sin(currentTime * 1.3f),
-        };
-        glm::vec3 lightDiffuse = lightColor * glm::vec3(0.5f);
-        glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
+        // glm::vec3 lightColor{sin(currentTime * 2.0f), sin(currentTime * 0.7f), sin(currentTime * 1.4f)};
+        // glm::vec3 lightAmbient = lightColor * glm::vec3(0.2f);
+        // glm::vec3 lightDiffuse = lightColor * glm::vec3(0.7f);
 
         // Projection matrix
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
@@ -221,8 +236,6 @@ int main() {
             lightShader.Bind();
             lightShader.SetUniformMatrix4f("u_Projection", projection);
             lightShader.SetUniformMatrix4f("u_View", view);
-            // Set light uniforms
-            lightShader.SetUniform3f("u_LightColor", lightColor);
 
             lightPosition.x = 1.0f + sin((float)currentTime) * 3.0f;
             lightPosition.y = sin((float)currentTime / 3.0f);
@@ -241,9 +254,12 @@ int main() {
             objShader.SetUniformMatrix4f("u_View", view);
             objShader.SetUniform3f("u_ViewPos", camera.GetPosition());
             // Set light stuff
-            objShader.SetUniform3f("u_Light.position", lightPosition);
-            objShader.SetUniform3f("u_Light.ambient", lightAmbient);
-            objShader.SetUniform3f("u_Light.diffuse", lightDiffuse);
+            objShader.SetUniform3f("u_PtLight.position", lightPosition);
+            objShader.SetUniform3f("u_SpLight.position", camera.GetPosition());
+            objShader.SetUniform3f("u_SpLight.direction", camera.GetFront());
+            objShader.SetUniform1f("u_SpLight.cutOff", cos(glm::radians(12.5f)));
+            // objShader.SetUniform3f("u_PtLight.ambient", lightAmbient);
+            // objShader.SetUniform3f("u_PtLight.diffuse", lightDiffuse);
 
             for (unsigned int i = 0; i < 10; i++) {
                 // Model matrix
