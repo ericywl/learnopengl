@@ -174,18 +174,20 @@ int main() {
     objShader.SetUniform1f("u_PtLight.linear", 0.09f);
     objShader.SetUniform1f("u_PtLight.quadratic", 0.032f);
     // Set directional light uniforms
-    objShader.SetUniform3f("u_DirLight.ambient", 0.1f, 0.1f, 0.1f);
-    objShader.SetUniform3f("u_DirLight.diffuse", 0.4f, 0.4f, 0.4f);
-    objShader.SetUniform3f("u_DirLight.specular", 0.6f, 0.6f, 0.6f);
+    objShader.SetUniform3f("u_DirLight.ambient", 0.05f, 0.05f, 0.05f);
+    objShader.SetUniform3f("u_DirLight.diffuse", 0.15f, 0.15f, 0.15f);
+    objShader.SetUniform3f("u_DirLight.specular", 0.25f, 0.25f, 0.25f);
     objShader.SetUniform3f("u_DirLight.direction", -0.2f, -1.0f, -0.3f);
     // Set spot light uniforms
-    objShader.SetUniform3f("u_SpLight.ambient", 0.2f, 0.2f, 0.2f);
+    objShader.SetUniform3f("u_SpLight.ambient", 0.1f, 0.1f, 0.1f);
     objShader.SetUniform3f("u_SpLight.diffuse", 0.5f, 0.5f, 0.5f);
     objShader.SetUniform3f("u_SpLight.specular", 1.0f, 1.0f, 1.0f);
     objShader.SetUniform3f("u_SpLight.position", camera.GetPosition());
     objShader.SetUniform1f("u_SpLight.constant", 1.0f);
     objShader.SetUniform1f("u_SpLight.linear", 0.09f);
     objShader.SetUniform1f("u_SpLight.quadratic", 0.032f);
+    objShader.SetUniform1f("u_SpLight.dropOff", cos(glm::radians(12.5f)));
+    objShader.SetUniform1f("u_SpLight.cutOff", cos(glm::radians(17.5f)));
     // Set object material (diffuse and specular are texture indices)
     objShader.SetUniform1f("u_Material.shininess", 32.0f);
     objShader.SetUniform1i("u_Material.diffuse", 0);
@@ -257,7 +259,6 @@ int main() {
             objShader.SetUniform3f("u_PtLight.position", lightPosition);
             objShader.SetUniform3f("u_SpLight.position", camera.GetPosition());
             objShader.SetUniform3f("u_SpLight.direction", camera.GetFront());
-            objShader.SetUniform1f("u_SpLight.cutOff", cos(glm::radians(12.5f)));
             // objShader.SetUniform3f("u_PtLight.ambient", lightAmbient);
             // objShader.SetUniform3f("u_PtLight.diffuse", lightDiffuse);
 
