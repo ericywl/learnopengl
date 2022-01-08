@@ -19,18 +19,20 @@ const double TARGET_FPS = 60.0;
 
 void processCameraInputs(Camera& camera, float deltaTime) {
     // WASD to control camera movement
+    CameraMovementBit moveBit = CameraMovementBit::None;
     if (Input::IsKeyPressed(Key::W)) {
-        camera.ProcessMovement(CameraMovement::Forward, deltaTime);
+        moveBit = moveBit | CameraMovementBit::Forward;
     }
     if (Input::IsKeyPressed(Key::S)) {
-        camera.ProcessMovement(CameraMovement::Backward, deltaTime);
+        moveBit = moveBit | CameraMovementBit::Backward;
     }
     if (Input::IsKeyPressed(Key::A)) {
-        camera.ProcessMovement(CameraMovement::Left, deltaTime);
+        moveBit = moveBit | CameraMovementBit::Left;
     }
     if (Input::IsKeyPressed(Key::D)) {
-        camera.ProcessMovement(CameraMovement::Right, deltaTime);
+        moveBit = moveBit | CameraMovementBit::Right;
     }
+    camera.ProcessMovement(moveBit, deltaTime);
 
     // Y-axis scroll to control camera zoom
     camera.ProcessZoom(Input::GetMouseScrollDelta().second);
@@ -49,7 +51,7 @@ void processWindowInputs(Window& window) {
     }
 
     // Fullscreen toggle
-    if (Input::IsKeyJustPressed(Key::Enter, ModifierBits::Alt)) {
+    if (Input::IsKeyJustPressed(Key::Enter, ModifierBit::Alt)) {
         window.ToggleFullScreen();
     }
 }

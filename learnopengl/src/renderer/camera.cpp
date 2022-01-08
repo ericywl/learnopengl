@@ -17,22 +17,25 @@ glm::mat4 Camera::ViewMatrix() const {
     return glm::lookAt(m_Position, m_Position + m_Front, m_Up);
 }
 
-void Camera::ProcessMovement(CameraMovement direction, float deltaTime) {
+void Camera::ProcessMovement(CameraMovementBit direction, float deltaTime) {
     float velocity = m_Options.MovementSpeed * deltaTime;
-    if (direction == CameraMovement::Forward) {
-        m_Position += m_Front * velocity;
+    glm::vec3 finalDir(0.0f);
+
+    if (static_cast<int>(direction & CameraMovementBit::Forward)) {
+        finalDir += m_Front;
+    }
+    if (static_cast<int>(direction & CameraMovementBit::Backward)) {
+        finalDir -= m_Front;
+    }
+    if (static_cast<int>(direction & CameraMovementBit::Left)) {
+        finalDir -= m_Right;
+    }
+    if (static_cast<int>(direction & CameraMovementBit::Right)) {
+        finalDir += m_Right;
     }
 
-    if (direction == CameraMovement::Backward) {
-        m_Position -= m_Front * velocity;
-    }
-
-    if (direction == CameraMovement::Left) {
-        m_Position -= m_Right * velocity;
-    }
-
-    if (direction == CameraMovement::Right) {
-        m_Position += m_Right * velocity;
+    if (glm::length(finalDir) != 0) {
+        m_Position += glm::normalize(finalDir) * velocity;
     }
 }
 

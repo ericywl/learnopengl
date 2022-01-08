@@ -45,22 +45,22 @@ enum class MouseButton : int {
     Last = GLFW_MOUSE_BUTTON_LAST + 1,
 };
 
-enum class ModifierBits : int {
+enum class ModifierBit : int {
     None = 0,
     Shift = GLFW_MOD_SHIFT,
     Ctrl = GLFW_MOD_CONTROL,
     Alt = GLFW_MOD_ALT,
 };
 
-inline ModifierBits operator|(ModifierBits a, ModifierBits b) {
-    return static_cast<ModifierBits>(static_cast<int>(a) | static_cast<int>(b));
+inline ModifierBit operator|(ModifierBit a, ModifierBit b) {
+    return static_cast<ModifierBit>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline ModifierBits operator&(ModifierBits a, ModifierBits b) {
-    return static_cast<ModifierBits>(static_cast<int>(a) & static_cast<int>(b));
+inline ModifierBit operator&(ModifierBit a, ModifierBit b) {
+    return static_cast<ModifierBit>(static_cast<int>(a) & static_cast<int>(b));
 }
 
-const ModifierBits ALL_SUPPORTED_MODIFIER_BITS = ModifierBits::Shift | ModifierBits::Ctrl | ModifierBits::Alt;
+const ModifierBit ALL_SUPPORTED_MODIFIER_BITS = ModifierBit::Shift | ModifierBit::Ctrl | ModifierBit::Alt;
 
 struct InputRegistry {
     bool Current;
@@ -85,7 +85,7 @@ class Input {
 
    public:
     inline static void MouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
-        return AddMouseButtonRegistry(MouseButton(button), Action(action), ModifierBits(mods));
+        return AddMouseButtonRegistry(MouseButton(button), Action(action), ModifierBit(mods));
     }
 
     inline static void MousePositionCallback(GLFWwindow* window, double xpos, double ypos) {
@@ -93,7 +93,7 @@ class Input {
     }
 
     inline static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mods) {
-        return AddKeyRegistry(Key(key), Action(action), ModifierBits(mods));
+        return AddKeyRegistry(Key(key), Action(action), ModifierBit(mods));
     }
 
     inline static void MouseScrollCallback(GLFWwindow* window, double xoffset, double yoffset) {
@@ -120,15 +120,15 @@ class Input {
                   false);
     }
 
-    static bool IsKeyPressed(Key key, ModifierBits mods = ModifierBits::None);
-    static bool IsKeyJustPressed(Key key, ModifierBits mods = ModifierBits::None);
-    static bool IsMouseButtonPressed(MouseButton mb, ModifierBits mods = ModifierBits::None);
-    static bool IsMouseButtonJustPressed(MouseButton mb, ModifierBits mods = ModifierBits::None);
-    static void AddKeyRegistry(Key key, Action action, ModifierBits mods);
-    static void AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBits mods);
+    static bool IsKeyPressed(Key key, ModifierBit mods = ModifierBit::None);
+    static bool IsKeyJustPressed(Key key, ModifierBit mods = ModifierBit::None);
+    static bool IsMouseButtonPressed(MouseButton mb, ModifierBit mods = ModifierBit::None);
+    static bool IsMouseButtonJustPressed(MouseButton mb, ModifierBit mods = ModifierBit::None);
+    static void AddKeyRegistry(Key key, Action action, ModifierBit mods);
+    static void AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBit mods);
     static void AddMousePositionRegistry(float x, float y);
     static void AddMouseScrollRegistry(float xOffset, float yOffset);
 
    private:
-    static bool AreModifiersPressed(ModifierBits mods);
+    static bool AreModifiersPressed(ModifierBit mods);
 };

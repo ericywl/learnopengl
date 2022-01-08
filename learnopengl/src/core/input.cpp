@@ -2,26 +2,26 @@
 
 InputInst Input::s_Instance;
 
-bool Input::AreModifiersPressed(ModifierBits mods) {
-    if ((mods & ALL_SUPPORTED_MODIFIER_BITS) == ModifierBits::None) {
+bool Input::AreModifiersPressed(ModifierBit mods) {
+    if ((mods & ALL_SUPPORTED_MODIFIER_BITS) == ModifierBit::None) {
         return false;
     }
 
     bool pressed = true;
-    if ((mods & ModifierBits::Shift) != ModifierBits::None) {
+    if (static_cast<int>(mods & ModifierBit::Shift)) {
         pressed = pressed && (IsKeyPressed(Key::LShift) || IsKeyPressed(Key::RShift));
     }
-    if ((mods & ModifierBits::Ctrl) != ModifierBits::None) {
+    if (static_cast<int>(mods & ModifierBit::Ctrl)) {
         pressed = pressed && (IsKeyPressed(Key::LCtrl) || IsKeyPressed(Key::RCtrl));
     }
-    if ((mods & ModifierBits::Alt) != ModifierBits::None) {
+    if (static_cast<int>(mods & ModifierBit::Alt)) {
         pressed = pressed && (IsKeyPressed(Key::LAlt) || IsKeyPressed(Key::RAlt));
     }
 
     return pressed;
 }
 
-bool Input::IsKeyPressed(Key key, ModifierBits mods) {
+bool Input::IsKeyPressed(Key key, ModifierBit mods) {
     if (key <= Key::Unknown || key >= Key::Last) {
         throw std::runtime_error("Invalid key pressed");
     }
@@ -31,14 +31,14 @@ bool Input::IsKeyPressed(Key key, ModifierBits mods) {
         return false;
     }
 
-    if (mods != ModifierBits::None) {
+    if (mods != ModifierBit::None) {
         return AreModifiersPressed(mods);
     }
 
     return true;
 }
 
-bool Input::IsKeyJustPressed(Key key, ModifierBits mods) {
+bool Input::IsKeyJustPressed(Key key, ModifierBit mods) {
     if (key <= Key::Unknown || key >= Key::Last) {
         throw std::runtime_error("Invalid key pressed");
     }
@@ -48,14 +48,14 @@ bool Input::IsKeyJustPressed(Key key, ModifierBits mods) {
         return false;
     }
 
-    if (mods != ModifierBits::None) {
+    if (mods != ModifierBit::None) {
         return AreModifiersPressed(mods);
     }
 
     return true;
 }
 
-bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBits mods) {
+bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBit mods) {
     if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
         throw std::runtime_error("Invalid mouse button pressed");
     }
@@ -65,14 +65,14 @@ bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBits mods) {
         return false;
     }
 
-    if (mods != ModifierBits::None) {
+    if (mods != ModifierBit::None) {
         return AreModifiersPressed(mods);
     }
 
     return true;
 }
 
-bool Input::IsMouseButtonJustPressed(MouseButton mb, ModifierBits mods) {
+bool Input::IsMouseButtonJustPressed(MouseButton mb, ModifierBit mods) {
     if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
         throw std::runtime_error("Invalid mouse button pressed");
     }
@@ -82,14 +82,14 @@ bool Input::IsMouseButtonJustPressed(MouseButton mb, ModifierBits mods) {
         return false;
     }
 
-    if (mods != ModifierBits::None) {
+    if (mods != ModifierBit::None) {
         return AreModifiersPressed(mods);
     }
 
     return true;
 }
 
-void Input::AddKeyRegistry(Key key, Action action, ModifierBits mods) {
+void Input::AddKeyRegistry(Key key, Action action, ModifierBit mods) {
     if (key <= Key::Unknown || key >= Key::Last) {
         return;
     }
@@ -103,7 +103,7 @@ void Input::AddKeyRegistry(Key key, Action action, ModifierBits mods) {
     }
 }
 
-void Input::AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBits mods) {
+void Input::AddMouseButtonRegistry(MouseButton mb, Action action, ModifierBit mods) {
     if (mb <= MouseButton::Unknown || mb >= MouseButton::Last) {
         return;
     }

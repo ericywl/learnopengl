@@ -5,12 +5,21 @@
 
 const float MAX_ZOOM_LEVEL = 45.0f;
 
-enum class CameraMovement {
-    Forward,
-    Backward,
-    Left,
-    Right,
+enum class CameraMovementBit : int {
+    None = 0x0,
+    Forward = 0x1,
+    Backward = 0x2,
+    Left = 0x4,
+    Right = 0x8,
 };
+
+inline CameraMovementBit operator|(CameraMovementBit a, CameraMovementBit b) {
+    return static_cast<CameraMovementBit>(static_cast<int>(a) | static_cast<int>(b));
+}
+
+inline CameraMovementBit operator&(CameraMovementBit a, CameraMovementBit b) {
+    return static_cast<CameraMovementBit>(static_cast<int>(a) & static_cast<int>(b));
+}
 
 struct CameraOptions {
     float Yaw, Pitch, MovementSpeed, Sensitivity, Zoom;
@@ -31,7 +40,7 @@ class Camera {
            CameraOptions options = defaultCameraOptions);
 
     glm::mat4 ViewMatrix() const;
-    void ProcessMovement(CameraMovement direction, float deltaTime);
+    void ProcessMovement(CameraMovementBit direction, float deltaTime);
     void ProcessRotation(float xOffset, float yOffset, bool constrainPitch = true);
     void ProcessZoom(float offset);
 
