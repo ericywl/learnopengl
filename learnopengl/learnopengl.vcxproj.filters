@@ -57,6 +57,12 @@
     <ClCompile Include="src\core\application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\light.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\renderer\mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
@@ -1361,6 +1367,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\core\application.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\renderer\light.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\renderer\mesh.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

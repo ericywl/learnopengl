@@ -17,4 +17,8 @@ class IndexBuffer {
     inline unsigned int GetCount() const {
         return m_Count;
     }
+
+    inline unsigned int GetReferenceID() const {
+        return m_RendererID;
+    }
 };

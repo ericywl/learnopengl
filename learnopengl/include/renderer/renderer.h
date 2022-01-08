@@ -2,6 +2,7 @@
 
 #include <common.h>
 #include <renderer/ibo.h>
+#include <renderer/mesh.h>
 #include <renderer/vao.h>
 
 class Renderer {
@@ -9,6 +10,7 @@ class Renderer {
    public:
     void Draw(const VertexArray& va, const IndexBuffer& ib) const;
     void Draw(const VertexArray& va, const unsigned int count) const;
+    void Draw(const Mesh& mesh, Shader& shader) const;
     void Clear() const;
 
     void SetClearColor(const Color& color) const;

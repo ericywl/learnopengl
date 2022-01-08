@@ -23,6 +23,14 @@ enum class TextureWrap {
     MirrorClampToEdge = GL_MIRROR_CLAMP_TO_EDGE,
 };
 
+enum class TextureType {
+    Texture,
+    Diffuse,
+    Specular,
+    Normal,
+    Height,
+};
+
 struct TextureOptions {
     TextureMinFilter MinFilter;
     TextureMaxFilter MaxFilter;
@@ -43,9 +51,11 @@ class Texture {
     unsigned int m_ReferenceID;
     std::string m_FilePath;
     int m_Width, m_Height, m_BPP;
+    TextureType m_Type;
 
    public:
-    Texture(const std::string& filePath, const TextureOptions options = defaultOptions);
+    Texture(const std::string& filePath, const TextureType type = TextureType::Texture,
+            const TextureOptions options = defaultOptions);
     ~Texture();
 
     void Bind(unsigned int slot = 0) const;
@@ -57,5 +67,13 @@ class Texture {
 
     inline int GetHeight() const {
         return m_Height;
+    }
+
+    inline TextureType GetType() const {
+        return m_Type;
+    }
+
+    inline unsigned int GetReferenceID() const {
+        return m_ReferenceID;
     }
 };

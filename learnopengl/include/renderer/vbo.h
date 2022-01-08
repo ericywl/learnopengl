@@ -12,4 +12,8 @@ class VertexBuffer {
 
     void Bind() const;
     void Unbind() const;
+
+    inline unsigned int GetReferenceID() {
+        return m_ReferenceID;
+    }
 };

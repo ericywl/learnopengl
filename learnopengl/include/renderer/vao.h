@@ -85,4 +85,8 @@ class VertexArray {
     void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
     void Bind() const;
     void Unbind() const;
+
+    inline unsigned int GetReferenceID() {
+        return m_ReferenceID;
+    }
 };

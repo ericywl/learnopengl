@@ -11,6 +11,11 @@ void Renderer::Draw(const VertexArray& va, const unsigned int count) const {
     glDrawArrays(GL_TRIANGLES, 0, count);
 }
 
+void Renderer::Draw(const Mesh& mesh, Shader& shader) const {
+    mesh.SetupDraw(shader);
+    Draw(mesh.GetVAO(), mesh.GetIBO());
+}
+
 void Renderer::Clear() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }

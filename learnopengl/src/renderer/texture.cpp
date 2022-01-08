@@ -1,8 +1,8 @@
 #include <renderer/texture.h>
 #include <stb_image/stb_image.h>
 
-Texture::Texture(const std::string& filePath, const TextureOptions options)
-    : m_ReferenceID(0), m_FilePath(filePath), m_Width(0), m_Height(0), m_BPP(0) {
+Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions options)
+    : m_ReferenceID(0), m_FilePath(filePath), m_Width(0), m_Height(0), m_BPP(0), m_Type(type) {
     // Flip the image since OpenGL expects image coordinates to start from bottom-left
     stbi_set_flip_vertically_on_load(1);
     unsigned char* data = stbi_load(filePath.c_str(), &m_Width, &m_Height, &m_BPP, 4);

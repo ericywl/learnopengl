@@ -121,6 +121,7 @@
       <PreprocessorDefinitions>GLFW_INCLUDE_NONE;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Code\cpp-files\include;include;vendor</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -138,6 +139,7 @@
       <PreprocessorDefinitions>GLFW_INCLUDE_NONE;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>D:\Code\cpp-files\include;include;vendor</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -153,8 +155,10 @@
     <ClCompile Include="src\core\input.cpp" />
     <ClCompile Include="src\core\window.cpp" />
     <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\renderer\mesh.cpp" />
     <ClCompile Include="src\renderer\camera.cpp" />
     <ClCompile Include="src\renderer\ibo.cpp" />
+    <ClCompile Include="src\renderer\light.cpp" />
     <ClCompile Include="src\renderer\renderer.cpp" />
     <ClCompile Include="src\renderer\shader.cpp" />
     <ClCompile Include="src\renderer\texture.cpp" />
@@ -317,8 +321,10 @@
     <ClInclude Include="include\core\time.h" />
     <ClInclude Include="include\core\window.h" />
     <ClInclude Include="include\core\input.h" />
+    <ClInclude Include="include\renderer\mesh.h" />
     <ClInclude Include="include\renderer\camera.h" />
     <ClInclude Include="include\renderer\ibo.h" />
+    <ClInclude Include="include\renderer\light.h" />
     <ClInclude Include="include\renderer\renderer.h" />
     <ClInclude Include="include\renderer\shader.h" />
     <ClInclude Include="include\renderer\texture.h" />
