@@ -6,6 +6,17 @@
 #include <scene/mesh.h>
 #include <scene/model.h>
 
+enum class DepthFunc {
+    Always = GL_ALWAYS,
+    Never = GL_NEVER,
+    Less = GL_LESS,
+    Equal = GL_EQUAL,
+    LessEqual = GL_LEQUAL,
+    GreaterEqual = GL_GEQUAL,
+    Greater = GL_GREATER,
+    NotEqual = GL_NOTEQUAL,
+};
+
 class Renderer {
    private:
    public:
@@ -19,4 +30,6 @@ class Renderer {
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
     void SetDepthTest(bool on) const;
+    void SetDepthMask(bool on) const;
+    void SetDepthFunc(DepthFunc f) const;
 };

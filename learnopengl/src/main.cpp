@@ -282,11 +282,7 @@ int renderLightsAndCubes() {
     return 0;
 }
 
-int main() {
-#ifdef DEBUG
-    spdlog::set_level(spdlog::level::debug);
-#endif
-
+int renderBackpackModel() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -354,4 +350,12 @@ int main() {
     }
 
     return 0;
+}
+
+int main() {
+#ifdef DEBUG
+    spdlog::set_level(spdlog::level::debug);
+#endif
+
+    return renderBackpackModel();
 }

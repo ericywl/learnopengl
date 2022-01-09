@@ -56,3 +56,15 @@ void Renderer::SetDepthTest(bool on) const {
         glDisable(GL_DEPTH_TEST);
     }
 }
+
+void Renderer::SetDepthMask(bool on) const {
+    if (on) {
+        glDepthMask(GL_TRUE);
+    } else {
+        glDepthMask(GL_FALSE);
+    }
+}
+
+void Renderer::SetDepthFunc(DepthFunc f) const {
+    glDepthFunc(static_cast<GLenum>(f));
+}
