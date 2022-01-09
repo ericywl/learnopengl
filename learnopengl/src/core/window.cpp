@@ -1,6 +1,5 @@
 #include <common.h>
 #include <core/window.h>
-#include <spdlog/spdlog.h>
 
 #include <stdexcept>
 

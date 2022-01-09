@@ -2,7 +2,7 @@
 
 class IndexBuffer {
    private:
-    unsigned int m_RendererID;
+    unsigned int m_ReferenceID;
     unsigned int m_Count;
 
    public:
@@ -17,6 +17,6 @@ class IndexBuffer {
     }
 
     inline unsigned int GetReferenceID() const {
-        return m_RendererID;
+        return m_ReferenceID;
     }
 };

@@ -3,7 +3,6 @@
 #include <common.h>
 #include <core/input.h>
 
-#include <map>
 #include <string>
 
 class Window {

@@ -8,7 +8,7 @@ VertexBuffer::VertexBuffer(const void* data, unsigned int size) : m_ReferenceID(
 }
 
 VertexBuffer::~VertexBuffer() {
-    spdlog::debug("vertex buffer destroyed");
+    spdlog::debug("VertexBuffer {} destroyed", m_ReferenceID);
     glDeleteBuffers(1, &m_ReferenceID);
 }
 

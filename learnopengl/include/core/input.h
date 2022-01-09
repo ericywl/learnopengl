@@ -2,8 +2,6 @@
 
 #include <common.h>
 
-#include <map>
-
 enum class Action : int {
     Release = GLFW_RELEASE,
     Press = GLFW_PRESS,

@@ -1,3 +1,4 @@
+#include <common.h>
 #include <renderer/vao.h>
 
 VertexArray::VertexArray() : m_ReferenceID(0) {
@@ -6,6 +7,7 @@ VertexArray::VertexArray() : m_ReferenceID(0) {
 }
 
 VertexArray::~VertexArray() {
+    spdlog::debug("VertexArray {} destroyed", m_ReferenceID);
     glDeleteVertexArrays(1, &m_ReferenceID);
 }
 
