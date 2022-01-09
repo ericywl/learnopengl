@@ -1,3 +1,4 @@
+#include <common.h>
 #include <renderer/renderer.h>
 
 void Renderer::Draw(const VertexArray& va, const IndexBuffer& ib) const {
@@ -20,8 +21,8 @@ void Renderer::Clear() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
 
-void Renderer::SetClearColor(const Color& color) const {
-    glClearColor(color.Red, color.Green, color.Blue, color.Alpha);
+void Renderer::SetClearColor(const glm::vec4 color) const {
+    glClearColor(color.r, color.g, color.b, color.a);
 }
 
 void Renderer::SetBlending(bool on) const {

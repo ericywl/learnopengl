@@ -1,8 +1,10 @@
 #include <core/input.h>
 
+#include <stdexcept>
+
 InputInst Input::s_Instance;
 
-bool Input::AreModifiersPressed(ModifierBit mods) {
+bool Input::areModifiersPressed(ModifierBit mods) {
     if ((mods & ALL_SUPPORTED_MODIFIER_BITS) == ModifierBit::None) {
         return false;
     }
@@ -32,7 +34,7 @@ bool Input::IsKeyPressed(Key key, ModifierBit mods) {
     }
 
     if (mods != ModifierBit::None) {
-        return AreModifiersPressed(mods);
+        return areModifiersPressed(mods);
     }
 
     return true;
@@ -49,7 +51,7 @@ bool Input::IsKeyJustPressed(Key key, ModifierBit mods) {
     }
 
     if (mods != ModifierBit::None) {
-        return AreModifiersPressed(mods);
+        return areModifiersPressed(mods);
     }
 
     return true;
@@ -66,7 +68,7 @@ bool Input::IsMouseButtonPressed(MouseButton mb, ModifierBit mods) {
     }
 
     if (mods != ModifierBit::None) {
-        return AreModifiersPressed(mods);
+        return areModifiersPressed(mods);
     }
 
     return true;
@@ -83,7 +85,7 @@ bool Input::IsMouseButtonJustPressed(MouseButton mb, ModifierBit mods) {
     }
 
     if (mods != ModifierBit::None) {
-        return AreModifiersPressed(mods);
+        return areModifiersPressed(mods);
     }
 
     return true;

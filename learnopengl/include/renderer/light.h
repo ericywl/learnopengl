@@ -1,7 +1,8 @@
 #pragma once
 
-#include <common.h>
 #include <renderer/shader.h>
+
+#include <glm/glm.hpp>
 
 struct BasicLight {
     glm::vec3 Color;

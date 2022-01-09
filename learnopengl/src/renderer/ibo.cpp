@@ -1,3 +1,4 @@
+#include <common.h>
 #include <renderer/ibo.h>
 
 IndexBuffer::IndexBuffer(const unsigned int* data, unsigned int count) : m_RendererID(0), m_Count(count) {

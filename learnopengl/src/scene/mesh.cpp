@@ -1,23 +1,17 @@
-#include <renderer/mesh.h>
+#include <scene/mesh.h>
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture*> textures)
     : m_Vertices(vertices), m_Indices(indices), m_Textures(textures) {
-    m_VBO = new VertexBuffer(&vertices[0], (unsigned int)(vertices.size() * sizeof(Vertex)));
-    m_IBO = new IndexBuffer(&indices[0], (unsigned int)indices.size());
+    m_VBO = std::make_shared<VertexBuffer>(&vertices[0], (unsigned int)(vertices.size() * sizeof(Vertex)));
+    m_IBO = std::make_shared<IndexBuffer>(&indices[0], (unsigned int)indices.size());
 
     VertexBufferLayout layout;
     layout.Push<float>(3);
     layout.Push<float>(3);
     layout.Push<float>(2);
 
-    m_VAO = new VertexArray;
+    m_VAO = std::make_shared<VertexArray>();
     m_VAO->AddBuffer(*m_VBO, layout);
-}
-
-Mesh::~Mesh() {
-    delete m_VBO;
-    delete m_IBO;
-    delete m_VAO;
 }
 
 void Mesh::SetupDraw(Shader& shader) const {

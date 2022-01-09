@@ -4,13 +4,16 @@
 #include <renderer/camera.h>
 #include <renderer/ibo.h>
 #include <renderer/light.h>
-#include <renderer/mesh.h>
 #include <renderer/renderer.h>
 #include <renderer/shader.h>
 #include <renderer/texture.h>
 #include <renderer/vao.h>
 #include <renderer/vbo.h>
+#include <scene/mesh.h>
+#include <spdlog/spdlog.h>
 
+#include <glm/gtc/matrix_inverse.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <iterator>
 
 #define DEBUG
@@ -207,6 +210,16 @@ int main() {
     // Framerate related
     double lastTimeF = Time::GetTime();
     int nbFrames = 0;
+
+    {
+        std::vector<Vertex> vertices{
+            {glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(0.0f, 0.0f)},
+            {glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 0.0f)},
+            {glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.0f, 0.0f, -1.0f), glm::vec2(1.0f, 1.0f)},
+        };
+        Mesh mesh(vertices, std::vector<unsigned int>{0, 1, 2}, std::vector<Texture*>{&tex1});
+        mesh.GetVBO();
+    }
 
     // Rendering loop
     while (!window.ShouldClose()) {

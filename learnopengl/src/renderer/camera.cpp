@@ -1,5 +1,7 @@
 #include <renderer/camera.h>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 Camera::Camera(glm::vec3 position, glm::vec3 worldUp, CameraOptions options)
     : m_Position(position), m_WorldUp(worldUp), m_Options(options) {
     updateCameraVectors();

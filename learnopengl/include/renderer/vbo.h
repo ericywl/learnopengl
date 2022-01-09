@@ -1,7 +1,5 @@
 #pragma once
 
-#include <common.h>
-
 class VertexBuffer {
    private:
     unsigned int m_ReferenceID;

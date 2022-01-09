@@ -60,7 +60,10 @@
     <ClCompile Include="src\renderer\light.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\renderer\mesh.cpp">
+    <ClCompile Include="src\scene\mesh.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\scene\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -485,9 +488,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\renderer\shader.h">
@@ -1372,7 +1372,13 @@
     <ClInclude Include="include\renderer\light.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="include\renderer\mesh.h">
+    <ClInclude Include="include\scene\mesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\scene\model.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

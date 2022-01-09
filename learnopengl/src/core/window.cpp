@@ -1,4 +1,8 @@
+#include <common.h>
 #include <core/window.h>
+#include <spdlog/spdlog.h>
+
+#include <stdexcept>
 
 void GLFWFrameBufferSizeCallback(GLFWwindow *window, int width, int height) {
     glViewport(0, 0, width, height);

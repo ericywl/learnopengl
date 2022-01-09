@@ -1,9 +1,9 @@
 #pragma once
 
-#include <common.h>
 #include <core/window.h>
 
 #include <sstream>
+#include <vector>
 
 class Application {
    private:

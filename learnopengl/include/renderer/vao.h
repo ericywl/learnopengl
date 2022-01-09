@@ -3,6 +3,8 @@
 #include <common.h>
 #include <renderer/vbo.h>
 
+#include <vector>
+
 struct VertexBufferElement {
     unsigned int count;
     unsigned int type;

@@ -1,11 +1,13 @@
 #pragma once
 
-#include <common.h>
 #include <renderer/ibo.h>
 #include <renderer/shader.h>
 #include <renderer/texture.h>
 #include <renderer/vao.h>
 #include <renderer/vbo.h>
+
+#include <glm/glm.hpp>
+#include <memory>
 
 struct Vertex {
     glm::vec3 Position;
@@ -19,13 +21,12 @@ class Mesh {
     std::vector<unsigned int> m_Indices;
     std::vector<Texture*> m_Textures;
 
-    VertexBuffer* m_VBO;
-    VertexArray* m_VAO;
-    IndexBuffer* m_IBO;
+    std::shared_ptr<VertexBuffer> m_VBO;
+    std::shared_ptr<VertexArray> m_VAO;
+    std::shared_ptr<IndexBuffer> m_IBO;
 
    public:
     Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Texture*> textures);
-    ~Mesh();
 
     void SetupDraw(Shader& shader) const;
 

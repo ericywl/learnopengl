@@ -1,7 +1,6 @@
 #pragma once
 
-#include <common.h>
-#include <math.h>
+#include <glm/glm.hpp>
 
 const float MAX_ZOOM_LEVEL = 45.0f;
 

@@ -155,7 +155,7 @@
     <ClCompile Include="src\core\input.cpp" />
     <ClCompile Include="src\core\window.cpp" />
     <ClCompile Include="src\main.cpp" />
-    <ClCompile Include="src\renderer\mesh.cpp" />
+    <ClCompile Include="src\scene\mesh.cpp" />
     <ClCompile Include="src\renderer\camera.cpp" />
     <ClCompile Include="src\renderer\ibo.cpp" />
     <ClCompile Include="src\renderer\light.cpp" />
@@ -164,6 +164,7 @@
     <ClCompile Include="src\renderer\texture.cpp" />
     <ClCompile Include="src\renderer\vao.cpp" />
     <ClCompile Include="src\renderer\vbo.cpp" />
+    <ClCompile Include="src\scene\model.cpp" />
     <ClCompile Include="vendor\glad\glad.c" />
     <ClCompile Include="vendor\glm\detail\glm.cpp" />
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
@@ -321,7 +322,7 @@
     <ClInclude Include="include\core\time.h" />
     <ClInclude Include="include\core\window.h" />
     <ClInclude Include="include\core\input.h" />
-    <ClInclude Include="include\renderer\mesh.h" />
+    <ClInclude Include="include\scene\mesh.h" />
     <ClInclude Include="include\renderer\camera.h" />
     <ClInclude Include="include\renderer\ibo.h" />
     <ClInclude Include="include\renderer\light.h" />
@@ -330,6 +331,7 @@
     <ClInclude Include="include\renderer\texture.h" />
     <ClInclude Include="include\renderer\vao.h" />
     <ClInclude Include="include\renderer\vbo.h" />
+    <ClInclude Include="include\scene\model.h" />
     <ClInclude Include="vendor\glm\common.hpp" />
     <ClInclude Include="vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="vendor\glm\detail\compute_vector_relational.hpp" />

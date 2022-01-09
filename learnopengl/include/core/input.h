@@ -130,5 +130,5 @@ class Input {
     static void AddMouseScrollRegistry(float xOffset, float yOffset);
 
    private:
-    static bool AreModifiersPressed(ModifierBit mods);
+    static bool areModifiersPressed(ModifierBit mods);
 };

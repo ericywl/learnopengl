@@ -1,9 +1,9 @@
 #pragma once
 
-#include <common.h>
 #include <renderer/ibo.h>
-#include <renderer/mesh.h>
+#include <renderer/shader.h>
 #include <renderer/vao.h>
+#include <scene/mesh.h>
 
 class Renderer {
    private:
@@ -13,7 +13,7 @@ class Renderer {
     void Draw(const Mesh& mesh, Shader& shader) const;
     void Clear() const;
 
-    void SetClearColor(const Color& color) const;
+    void SetClearColor(const glm::vec4 color) const;
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
     void SetDepthTest(bool on) const;

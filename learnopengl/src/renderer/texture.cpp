@@ -1,4 +1,6 @@
+#include <common.h>
 #include <renderer/texture.h>
+#include <spdlog/spdlog.h>
 #include <stb_image/stb_image.h>
 
 Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions options)
@@ -23,11 +25,8 @@ Texture::Texture(const std::string& filePath, const TextureType type, const Text
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
 
     // Set border color
-    if (options.BorderColor) {
-        float bc[] = {options.BorderColor->Red, options.BorderColor->Green, options.BorderColor->Blue,
-                      options.BorderColor->Alpha};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-    }
+    float bc[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b, options.BorderColor.a};
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
 
     // Create texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

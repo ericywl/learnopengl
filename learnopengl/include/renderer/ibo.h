@@ -1,7 +1,5 @@
 #pragma once
 
-#include <common.h>
-
 class IndexBuffer {
    private:
     unsigned int m_RendererID;

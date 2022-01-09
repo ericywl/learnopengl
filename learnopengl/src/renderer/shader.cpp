@@ -1,6 +1,8 @@
+#include <common.h>
 #include <renderer/shader.h>
 
 #include <fstream>
+#include <glm/gtc/type_ptr.hpp>
 #include <sstream>
 
 /* parseShader parses the shader source code from the filepath */

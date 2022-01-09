@@ -2,6 +2,7 @@
 
 #include <common.h>
 
+#include <glm/glm.hpp>
 #include <string>
 
 enum class TextureMaxFilter { Nearest = GL_NEAREST, Linear = GL_LINEAR };
@@ -36,14 +37,12 @@ struct TextureOptions {
     TextureMaxFilter MaxFilter;
     TextureWrap WrapS;
     TextureWrap WrapT;
-    Color* BorderColor = nullptr;
+    glm::vec4 BorderColor;
 };
 
 const TextureOptions defaultOptions = {
-    TextureMinFilter::NearestMipMapLinear,
-    TextureMaxFilter::Linear,
-    TextureWrap::Repeat,
-    TextureWrap::Repeat,
+    TextureMinFilter::NearestMipMapLinear, TextureMaxFilter::Linear, TextureWrap::Repeat, TextureWrap::Repeat,
+    glm::vec4{0.0f, 0.0f, 0.0f, 0.0f},
 };
 
 class Texture {

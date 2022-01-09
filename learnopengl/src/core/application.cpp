@@ -1,4 +1,6 @@
+#include <common.h>
 #include <core/application.h>
+#include <spdlog/spdlog.h>
 
 /* GLMessageCallback should get called whenever OpenGL encounters some error, which then prints out the error message in
  * some simple formatting */

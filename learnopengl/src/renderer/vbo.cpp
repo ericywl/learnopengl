@@ -1,3 +1,4 @@
+#include <common.h>
 #include <renderer/vbo.h>
 
 VertexBuffer::VertexBuffer(const void* data, unsigned int size) : m_ReferenceID(0) {
@@ -7,6 +8,7 @@ VertexBuffer::VertexBuffer(const void* data, unsigned int size) : m_ReferenceID(
 }
 
 VertexBuffer::~VertexBuffer() {
+    spdlog::debug("vertex buffer destroyed");
     glDeleteBuffers(1, &m_ReferenceID);
 }
 
