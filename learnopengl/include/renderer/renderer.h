@@ -29,7 +29,5 @@ class Renderer {
     void SetClearColor(const glm::vec4 color) const;
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
-    void SetDepthTest(bool on) const;
-    void SetDepthMask(bool on) const;
-    void SetDepthFunc(DepthFunc f) const;
+    void SetDepthTest(bool on, DepthFunc fn = DepthFunc::Less) const;
 };

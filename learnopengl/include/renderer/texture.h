@@ -33,11 +33,11 @@ enum class TextureType {
 };
 
 struct TextureOptions {
-    TextureMinFilter MinFilter;
-    TextureMaxFilter MaxFilter;
-    TextureWrap WrapS;
-    TextureWrap WrapT;
-    glm::vec4 BorderColor;
+    TextureMinFilter MinFilter = TextureMinFilter::NearestMipMapLinear;
+    TextureMaxFilter MaxFilter = TextureMaxFilter::Linear;
+    TextureWrap WrapS = TextureWrap::Repeat;
+    TextureWrap WrapT = TextureWrap::Repeat;
+    glm::vec4 BorderColor = glm::vec4{0.0f, 0.0f, 0.0f, 0.0f};
 };
 
 const TextureOptions defaultOptions = {

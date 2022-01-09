@@ -352,10 +352,155 @@ int renderBackpackModel() {
     return 0;
 }
 
+int renderDepthTestScene() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    // clang-format off
+    float cubeVertices[] = {
+        // positions          // texture Coords
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+        -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+    };
+    float planeVertices[] = {
+        // positions          // texture coords
+        // (note texture coords are higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f,  5.0f,  0.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+
+         5.0f, -0.5f,  5.0f,  2.0f, 0.0f,
+        -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
+         5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
+    };
+    // clang-format on
+
+    Shader shader("data/shaders/depth.vert", "data/shaders/depth.frag");
+    shader.Bind();
+
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(2);
+
+    VertexBuffer cubeVBO(cubeVertices, (unsigned int)sizeof(cubeVertices));
+    VertexArray cubeVAO;
+    cubeVAO.AddBuffer(cubeVBO, layout);
+
+    VertexBuffer planeVBO(planeVertices, (unsigned int)sizeof(planeVertices));
+    VertexArray planeVAO;
+    planeVAO.AddBuffer(planeVBO, layout);
+
+    Texture cubeTex("data/textures/marble.jpg");
+    Texture floorTex("data/textures/metal.png");
+    shader.SetUniform1i("u_Texture1", 0);
+
+    Renderer renderer;
+    renderer.SetDepthTest(true, DepthFunc::Less);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    // Frustum clipping planes
+    const float nearPlane = 0.1f;
+    const float farPlane = 100.0f;
+    shader.SetUniform1f("u_Near", nearPlane);
+    shader.SetUniform1f("u_Far", farPlane);
+
+    // Rendering loop
+    while (!window.ShouldClose()) {
+        // Clear screen
+        renderer.Clear();
+        processWindowInputs(window);
+        double currentTime = Time::GetTime();
+
+        // Projection matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, nearPlane, farPlane);
+        shader.SetUniformMatrix4f("u_Projection", projection);
+
+        // View matrix (reverse direction of where camera moves)
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+        processCameraInputs(camera, (float)deltaTime);
+        glm::mat4 view = camera.ViewMatrix();
+        shader.SetUniformMatrix4f("u_View", view);
+
+        {
+            // Draw cubes
+            cubeTex.Bind(0);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
+            shader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(cubeVAO, 36);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+            shader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(cubeVAO, 36);
+        }
+
+        {
+            // Draw floow
+            floorTex.Bind(0);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+            shader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(planeVAO, 6);
+        }
+
+        // Swap buffers and check events
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderBackpackModel();
+    return renderDepthTestScene();
 }

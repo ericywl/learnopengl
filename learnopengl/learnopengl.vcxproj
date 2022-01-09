@@ -173,6 +173,8 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
+    <None Include="data\shaders\depth.frag" />
+    <None Include="data\shaders\depth.vert" />
     <None Include="README.md" />
     <None Include="vendor\glm\detail\func_common.inl" />
     <None Include="vendor\glm\detail\func_common_simd.inl" />

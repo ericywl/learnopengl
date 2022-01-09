@@ -2,6 +2,8 @@
 #include <renderer/texture.h>
 #include <stb_image/stb_image.h>
 
+#include <filesystem>
+
 Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions options)
     : m_ReferenceID(0), m_FilePath(filePath), m_Width(0), m_Height(0), m_BPP(0), m_Type(type) {
     // Flip the image since OpenGL expects image coordinates to start from bottom-left
