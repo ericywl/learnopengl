@@ -20,6 +20,10 @@ class Model {
 
     void SetupDraw(Shader& shader) const;
 
+    inline std::vector<std::shared_ptr<Mesh>> GetMeshes() const {
+        return m_Meshes;
+    }
+
    private:
     void processNode(aiNode* node, const aiScene* scene);
     std::shared_ptr<Mesh> processMesh(aiMesh* mesh, const aiScene* scene);

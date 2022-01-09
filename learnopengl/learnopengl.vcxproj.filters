@@ -69,8 +69,6 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="data\shaders\basic.frag" />
-    <None Include="data\shaders\basic.vert" />
     <None Include="README.md" />
     <None Include="vendor\glm\detail\func_common.inl">
       <Filter>Header Files</Filter>
@@ -480,11 +478,6 @@
     <None Include="vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="data\shaders\light.frag" />
-    <None Include="data\shaders\phong.frag" />
-    <None Include="data\shaders\phong.vert" />
-    <None Include="data\shaders\gouraud.frag" />
-    <None Include="data\shaders\gouraud.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\window.h">
@@ -1381,22 +1374,5 @@
     <ClInclude Include="include\common.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="data\textures\wall.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="data\textures\container.jpg">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="data\textures\awesomeface.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="data\textures\container2.png">
-      <Filter>Resource Files</Filter>
-    </Image>
-    <Image Include="data\textures\container2_specular.png">
-      <Filter>Resource Files</Filter>
-    </Image>
   </ItemGroup>
 </Project>

@@ -4,6 +4,7 @@
 #include <renderer/shader.h>
 #include <renderer/vao.h>
 #include <scene/mesh.h>
+#include <scene/model.h>
 
 class Renderer {
    private:
@@ -11,6 +12,7 @@ class Renderer {
     void Draw(const VertexArray& va, const IndexBuffer& ib) const;
     void Draw(const VertexArray& va, const unsigned int count) const;
     void Draw(const Mesh& mesh, Shader& shader) const;
+    void Draw(const Model& model, Shader& shader) const;
     void Clear() const;
 
     void SetClearColor(const glm::vec4 color) const;

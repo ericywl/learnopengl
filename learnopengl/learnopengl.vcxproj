@@ -172,14 +172,7 @@
     <ClCompile Include="vendor\stb_image\stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="data\shaders\basic.frag" />
     <None Include=".clang-format" />
-    <None Include="data\shaders\basic.vert" />
-    <None Include="data\shaders\gouraud.frag" />
-    <None Include="data\shaders\gouraud.vert" />
-    <None Include="data\shaders\light.frag" />
-    <None Include="data\shaders\phong.frag" />
-    <None Include="data\shaders\phong.vert" />
     <None Include="README.md" />
     <None Include="vendor\glm\detail\func_common.inl" />
     <None Include="vendor\glm\detail\func_common_simd.inl" />
@@ -617,13 +610,6 @@
     <ClInclude Include="vendor\glm\vec4.hpp" />
     <ClInclude Include="vendor\glm\vector_relational.hpp" />
     <ClInclude Include="vendor\stb_image\stb_image.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="data\textures\awesomeface.png" />
-    <Image Include="data\textures\container.jpg" />
-    <Image Include="data\textures\container2.png" />
-    <Image Include="data\textures\container2_specular.png" />
-    <Image Include="data\textures\wall.jpg" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

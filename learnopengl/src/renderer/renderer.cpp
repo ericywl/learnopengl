@@ -17,6 +17,13 @@ void Renderer::Draw(const Mesh& mesh, Shader& shader) const {
     Draw(mesh.GetVAO(), mesh.GetIBO());
 }
 
+void Renderer::Draw(const Model& model, Shader& shader) const {
+    model.SetupDraw(shader);
+    for (std::shared_ptr<Mesh> mesh : model.GetMeshes()) {
+        Draw(*mesh, shader);
+    }
+}
+
 void Renderer::Clear() const {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 }
