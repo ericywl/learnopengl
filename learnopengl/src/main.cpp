@@ -3,6 +3,7 @@
 #include <core/input.h>
 #include <core/time.h>
 #include <renderer/camera.h>
+#include <renderer/fbo.h>
 #include <renderer/ibo.h>
 #include <renderer/light.h>
 #include <renderer/renderer.h>
@@ -14,6 +15,7 @@
 
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <map>
 
 #define DEBUG
 
@@ -25,16 +27,19 @@ void processCameraInputs(Camera& camera, float deltaTime) {
     // WASD to control camera movement
     CameraMovementBit moveBit = CameraMovementBit::None;
     if (Input::IsKeyPressed(Key::W)) {
-        moveBit = moveBit | CameraMovementBit::Forward;
+        moveBit |= CameraMovementBit::Forward;
     }
     if (Input::IsKeyPressed(Key::S)) {
-        moveBit = moveBit | CameraMovementBit::Backward;
+        moveBit |= CameraMovementBit::Backward;
     }
     if (Input::IsKeyPressed(Key::A)) {
-        moveBit = moveBit | CameraMovementBit::Left;
+        moveBit |= CameraMovementBit::Left;
     }
     if (Input::IsKeyPressed(Key::D)) {
-        moveBit = moveBit | CameraMovementBit::Right;
+        moveBit |= CameraMovementBit::Right;
+    }
+    if (Input::IsKeyPressed(Key::Space)) {
+        moveBit |= Input::IsKeyPressed(Key::LCtrl) ? CameraMovementBit::Down : CameraMovementBit::Up;
     }
     camera.ProcessMovement(moveBit, deltaTime);
 
@@ -415,10 +420,22 @@ int renderDepthTestScene() {
         -5.0f, -0.5f, -5.0f,  0.0f, 2.0f,
          5.0f, -0.5f, -5.0f,  2.0f, 2.0f								
     };
+
+    float transparentVertices[] = {
+        // positions         // texture coords
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        0.0f, -0.5f,  0.0f,  0.0f,  0.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+
+        0.0f,  0.5f,  0.0f,  0.0f,  1.0f,
+        1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
+        1.0f,  0.5f,  0.0f,  1.0f,  1.0f
+    };
     // clang-format on
 
-    Shader shader("data/shaders/depth.vert", "data/shaders/depth.frag");
-    shader.Bind();
+    Shader normalShader("data/shaders/depth.vert", "data/shaders/depth.frag");
+    Shader singleColorShader("data/shaders/depth.vert", "data/shaders/single_color.frag");
+    normalShader.Bind();
 
     VertexBufferLayout layout;
     layout.Push<float>(3);
@@ -432,12 +449,46 @@ int renderDepthTestScene() {
     VertexArray planeVAO;
     planeVAO.AddBuffer(planeVBO, layout);
 
+    VertexBuffer windowVBO(transparentVertices, (unsigned int)sizeof(transparentVertices));
+    VertexArray windowVAO;
+    windowVAO.AddBuffer(windowVBO, layout);
+
+    std::vector<glm::vec3> windowPositions{
+        glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f), glm::vec3(0.0f, 0.0f, 0.7f),
+        glm::vec3(-0.3f, 0.0f, -2.3f),  glm::vec3(0.5f, 0.0f, -0.6f),
+    };
+
+    /*
+    {
+        Texture screenTex(nullptr, SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::Attachment,
+                          TextureOptions(TextureMinFilter::Linear, TextureMaxFilter::Linear));
+        FrameBuffer fbo;
+        fbo.AddTextureAttachment(screenTex, 0);
+        fbo.Unbind();
+    }
+    */
+
     Texture cubeTex("data/textures/marble.jpg");
     Texture floorTex("data/textures/metal.png");
-    shader.SetUniform1i("u_Texture1", 0);
+    Texture grassTex("data/textures/grass.png", TextureOptions(TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
+    Texture windowTex("data/textures/blending_transparent_window.png",
+                      TextureOptions(TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
+    normalShader.SetUniform1i("u_Texture1", 0);
 
     Renderer renderer;
-    renderer.SetDepthTest(true, DepthFunc::Less);
+    // Blending
+    renderer.SetBlending(true);
+    // Face culling
+    renderer.SetFaceCulling(false);
+    renderer.SetCulledFace(CulledFace::Back);
+    // Depth testing
+    renderer.SetDepthTest(true);
+    renderer.SetDepthFunc(TestFunc::Less);
+    // Stencil testing
+    renderer.SetStencilTest(false);
+    // If any test fail, we do nothing aka. keep the value
+    // If both test succeeds, replace the stencil buffer value
+    renderer.SetStencilAction(TestAction::Keep, TestAction::Keep, TestAction::Replace);
 
     // Camera
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -447,8 +498,8 @@ int renderDepthTestScene() {
     // Frustum clipping planes
     const float nearPlane = 0.1f;
     const float farPlane = 100.0f;
-    shader.SetUniform1f("u_Near", nearPlane);
-    shader.SetUniform1f("u_Far", farPlane);
+    normalShader.SetUniform1f("u_Near", nearPlane);
+    normalShader.SetUniform1f("u_Far", farPlane);
 
     // Rendering loop
     while (!window.ShouldClose()) {
@@ -459,34 +510,99 @@ int renderDepthTestScene() {
 
         // Projection matrix
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, nearPlane, farPlane);
-        shader.SetUniformMatrix4f("u_Projection", projection);
 
         // View matrix (reverse direction of where camera moves)
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
         processCameraInputs(camera, (float)deltaTime);
         glm::mat4 view = camera.ViewMatrix();
-        shader.SetUniformMatrix4f("u_View", view);
+
+        // Set matrices
+        normalShader.SetUniformMatrix4f("u_View", view);
+        normalShader.SetUniformMatrix4f("u_Projection", projection);
 
         {
+            // Make sure we don't update stencil buffer while drawing floor
+            // renderer.SetStencilMask(0x00);
+
+            // Draw floor
+            floorTex.Bind(0);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+            normalShader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(planeVAO, 6);
+        }
+
+        {
+            // All fragments should pass the stencil test
+            renderer.SetStencilFunc(TestFunc::Always, 1, 0xFF);
+            // Enable writing to stencil buffer
+            renderer.SetStencilMask(0xFF);
+
             // Draw cubes
             cubeTex.Bind(0);
             glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
-            shader.SetUniformMatrix4f("u_Model", model);
+            normalShader.SetUniformMatrix4f("u_Model", model);
             renderer.Draw(cubeVAO, 36);
 
             model = glm::mat4(1.0f);
             model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
-            shader.SetUniformMatrix4f("u_Model", model);
+            normalShader.SetUniformMatrix4f("u_Model", model);
             renderer.Draw(cubeVAO, 36);
         }
 
+        /*
         {
-            // Draw floow
-            floorTex.Bind(0);
-            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
-            shader.SetUniformMatrix4f("u_Model", model);
-            renderer.Draw(planeVAO, 6);
+            // The above draw has written values into stencil buffer on the cube fragments
+            renderer.SetStencilFunc(TestFunc::NotEqual, 1, 0xFF);
+            // Disable writing to stencil buffer
+            renderer.SetStencilMask(0x00);
+            // Disable depth test so outline doesn't get clipped by anything
+            renderer.SetDepthTest(false);
+
+            // Use single color shader for drawing outline
+            singleColorShader.Bind();
+            singleColorShader.SetUniformMatrix4f("u_View", view);
+            singleColorShader.SetUniformMatrix4f("u_Projection", projection);
+
+            // Draw scaled-up cubes
+            // The result would be scaled-up cubes minus the normal cubes (from stencil buffer) but in single color
+            cubeTex.Bind(0);
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(-1.0f, 0.0f, -1.0f));
+            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
+            singleColorShader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(cubeVAO, 36);
+
+            model = glm::mat4(1.0f);
+            model = glm::translate(glm::mat4(1.0f), glm::vec3(2.0f, 0.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(1.1f, 1.1f, 1.1f));
+            singleColorShader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(cubeVAO, 36);
+
+            // Reset depth and stencil options since we change it to draw outline only
+            renderer.SetStencilMask(0xFF);
+            renderer.SetStencilFunc(TestFunc::Always, 1, 0xFF);
+            renderer.SetDepthTest(true);
+            // Reset shader to the normal one for next rendering
+            normalShader.Bind();
+        }
+        */
+
+        {
+            // Note: Always draw transparent objects after opaque objects
+            // Sort windows based on distance from camera
+            std::map<float, glm::vec3> sortedWPs;
+            for (unsigned int i = 0; i < windowPositions.size(); i++) {
+                float distance = glm::length(camera.GetPosition() - windowPositions[i]);
+                sortedWPs[distance] = windowPositions[i];
+            }
+
+            // Draw window after all opaque objects and in reverse-order (furthest from camera first)
+            windowTex.Bind(0);
+            for (std::map<float, glm::vec3>::reverse_iterator it = sortedWPs.rbegin(); it != sortedWPs.rend(); ++it) {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), it->second);
+                normalShader.SetUniformMatrix4f("u_Model", model);
+                renderer.Draw(windowVAO, 6);
+            }
         }
 
         // Swap buffers and check events

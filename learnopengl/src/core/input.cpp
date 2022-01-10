@@ -5,7 +5,7 @@
 InputInst Input::s_Instance;
 
 bool Input::areModifiersPressed(ModifierBit mods) {
-    if ((mods & ALL_SUPPORTED_MODIFIER_BITS) == ModifierBit::None) {
+    if ((mods & ModifierBit::All) == ModifierBit::None) {
         return false;
     }
 

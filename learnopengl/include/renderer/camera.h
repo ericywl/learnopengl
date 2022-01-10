@@ -5,18 +5,25 @@
 const float MAX_ZOOM_LEVEL = 45.0f;
 
 enum class CameraMovementBit : int {
-    None = 0x0,
-    Forward = 0x1,
-    Backward = 0x2,
-    Left = 0x4,
-    Right = 0x8,
+    None = 0b0,
+    Forward = 0b1,
+    Backward = 0b10,
+    Left = 0b100,
+    Right = 0b1000,
+    Up = 0b10000,
+    Down = 0b100000,
 };
 
-inline CameraMovementBit operator|(CameraMovementBit a, CameraMovementBit b) {
+inline CameraMovementBit operator|(const CameraMovementBit &a, const CameraMovementBit &b) {
     return static_cast<CameraMovementBit>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline CameraMovementBit operator&(CameraMovementBit a, CameraMovementBit b) {
+inline CameraMovementBit operator|=(CameraMovementBit &a, const CameraMovementBit &b) {
+    a = a | b;
+    return a;
+}
+
+inline CameraMovementBit operator&(const CameraMovementBit &a, const CameraMovementBit b) {
     return static_cast<CameraMovementBit>(static_cast<int>(a) & static_cast<int>(b));
 }
 

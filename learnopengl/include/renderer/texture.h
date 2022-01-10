@@ -5,7 +5,10 @@
 #include <glm/glm.hpp>
 #include <string>
 
-enum class TextureMaxFilter { Nearest = GL_NEAREST, Linear = GL_LINEAR };
+enum class TextureMaxFilter {
+    Nearest = GL_NEAREST,
+    Linear = GL_LINEAR,
+};
 
 enum class TextureMinFilter {
     Nearest = GL_NEAREST,
@@ -30,6 +33,7 @@ enum class TextureType {
     Specular,
     Normal,
     Height,
+    Attachment,
 };
 
 struct TextureOptions {
@@ -38,11 +42,36 @@ struct TextureOptions {
     TextureWrap WrapS = TextureWrap::Repeat;
     TextureWrap WrapT = TextureWrap::Repeat;
     glm::vec4 BorderColor = glm::vec4{0.0f, 0.0f, 0.0f, 0.0f};
-};
+    bool GenerateMipMap = true;
 
-const TextureOptions defaultOptions = {
-    TextureMinFilter::NearestMipMapLinear, TextureMaxFilter::Linear, TextureWrap::Repeat, TextureWrap::Repeat,
-    glm::vec4{0.0f, 0.0f, 0.0f, 0.0f},
+    TextureOptions() {}
+
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, glm::vec4 bc,
+                   bool genMipMap) {
+        MinFilter = minF;
+        MaxFilter = maxF;
+        WrapS = ws;
+        WrapT = wt;
+        BorderColor = bc;
+        GenerateMipMap = genMipMap;
+    }
+
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt) {
+        MinFilter = minF;
+        MaxFilter = maxF;
+        WrapS = ws;
+        WrapT = wt;
+    }
+
+    TextureOptions(TextureWrap wrapS, TextureWrap wrapT) {
+        WrapS = wrapS;
+        WrapT = wrapT;
+    }
+
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF) {
+        MinFilter = minF;
+        MaxFilter = maxF;
+    }
 };
 
 class Texture {
@@ -53,11 +82,16 @@ class Texture {
     TextureType m_Type;
 
    public:
-    Texture(const std::string& filePath, const TextureType type = TextureType::Texture,
-            const TextureOptions options = defaultOptions);
+    Texture(const std::string& filePath, const TextureType type, const TextureOptions options);
+    Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
+            const TextureType type, const TextureOptions options);
     ~Texture();
+    // Helper constructors
+    Texture(const std::string& filePath) : Texture(filePath, TextureType::Texture, TextureOptions()) {}
+    Texture(const std::string& filePath, const TextureOptions opts) : Texture(filePath, TextureType::Texture, opts) {}
+    Texture(const std::string& filePath, const TextureType type) : Texture(filePath, type, TextureOptions()) {}
 
-    void Bind(unsigned int slot = 0) const;
+    void Bind(const unsigned int slot = 0, const bool activate = true) const;
     void Unbind() const;
 
     inline int GetWidth() const {
@@ -75,4 +109,7 @@ class Texture {
     inline unsigned int GetReferenceID() const {
         return m_ReferenceID;
     }
+
+   private:
+    void init(unsigned char* data, const TextureOptions options);
 };

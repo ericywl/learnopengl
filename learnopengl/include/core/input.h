@@ -48,22 +48,16 @@ enum class ModifierBit : int {
     Shift = GLFW_MOD_SHIFT,
     Ctrl = GLFW_MOD_CONTROL,
     Alt = GLFW_MOD_ALT,
+    All = Shift | Ctrl | Alt,
 };
 
-inline ModifierBit operator|(ModifierBit a, ModifierBit b) {
+inline ModifierBit operator|(const ModifierBit& a, const ModifierBit& b) {
     return static_cast<ModifierBit>(static_cast<int>(a) | static_cast<int>(b));
 }
 
-inline ModifierBit operator&(ModifierBit a, ModifierBit b) {
+inline ModifierBit operator&(const ModifierBit& a, const ModifierBit& b) {
     return static_cast<ModifierBit>(static_cast<int>(a) & static_cast<int>(b));
 }
-
-const ModifierBit ALL_SUPPORTED_MODIFIER_BITS = ModifierBit::Shift | ModifierBit::Ctrl | ModifierBit::Alt;
-
-struct InputRegistry {
-    bool Current;
-    bool Previous;
-};
 
 class InputInst {
    public:

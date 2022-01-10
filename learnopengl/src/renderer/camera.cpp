@@ -35,6 +35,12 @@ void Camera::ProcessMovement(CameraMovementBit direction, float deltaTime) {
     if (static_cast<int>(direction & CameraMovementBit::Right)) {
         finalDir += m_Right;
     }
+    if (static_cast<int>(direction & CameraMovementBit::Up)) {
+        finalDir += m_Up;
+    }
+    if (static_cast<int>(direction & CameraMovementBit::Down)) {
+        finalDir -= m_Up;
+    }
 
     if (glm::length(finalDir) != 0) {
         m_Position += glm::normalize(finalDir) * velocity;

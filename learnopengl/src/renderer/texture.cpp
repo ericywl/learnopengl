@@ -4,6 +4,12 @@
 
 #include <filesystem>
 
+Texture::Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
+                 const TextureType type, const TextureOptions options)
+    : m_ReferenceID(0), m_FilePath(""), m_Width(w), m_Height(h), m_BPP(bpp), m_Type(type) {
+    init(data, options);
+}
+
 Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions options)
     : m_ReferenceID(0), m_FilePath(filePath), m_Width(0), m_Height(0), m_BPP(0), m_Type(type) {
     // Flip the image since OpenGL expects image coordinates to start from bottom-left
@@ -14,6 +20,29 @@ Texture::Texture(const std::string& filePath, const TextureType type, const Text
         throw "Cannot load texture image";
     }
 
+    init(data, options);
+    stbi_image_free(data);
+}
+
+Texture::~Texture() {
+    spdlog::debug("Texture {} destroyed", m_ReferenceID);
+    glDeleteTextures(1, &m_ReferenceID);
+}
+
+void Texture::Bind(const unsigned int slot, const bool activate) const {
+    if (activate) {
+        // Activate the texture in position specified by slot
+        glActiveTexture(GL_TEXTURE0 + slot);
+    }
+
+    glBindTexture(GL_TEXTURE_2D, m_ReferenceID);
+}
+
+void Texture::Unbind() const {
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+void Texture::init(unsigned char* data, const TextureOptions options) {
     glGenTextures(1, &m_ReferenceID);
     glBindTexture(GL_TEXTURE_2D, m_ReferenceID);
 
@@ -33,29 +62,10 @@ Texture::Texture(const std::string& filePath, const TextureType type, const Text
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
     // Generate mip-map
-    if (options.MinFilter == TextureMinFilter::LinearMipMapLinear ||
-        options.MinFilter == TextureMinFilter::NearestMipMapLinear ||
-        options.MinFilter == TextureMinFilter::LinearMipMapNearest ||
-        options.MinFilter == TextureMinFilter::NearestMipMapNearest) {
+    if (options.GenerateMipMap) {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
 
     // Unbind texture and free the local buffer
-    glBindTexture(GL_TEXTURE_2D, 0);
-    stbi_image_free(data);
-}
-
-Texture::~Texture() {
-    spdlog::debug("Texture {} destroyed", m_ReferenceID);
-    glDeleteTextures(1, &m_ReferenceID);
-}
-
-void Texture::Bind(unsigned int slot) const {
-    // Activate the texture in position specified by slot
-    glActiveTexture(GL_TEXTURE0 + slot);
-    glBindTexture(GL_TEXTURE_2D, m_ReferenceID);
-}
-
-void Texture::Unbind() const {
     glBindTexture(GL_TEXTURE_2D, 0);
 }

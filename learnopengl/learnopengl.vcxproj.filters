@@ -66,6 +66,9 @@
     <ClCompile Include="src\scene\model.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="src\renderer\fbo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
@@ -478,8 +481,6 @@
     <None Include="vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="data\shaders\depth.frag" />
-    <None Include="data\shaders\depth.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\window.h">
@@ -1374,6 +1375,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="include\common.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="include\renderer\fbo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
