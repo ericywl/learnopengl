@@ -41,10 +41,22 @@ struct TextureOptions {
     TextureMaxFilter MaxFilter = TextureMaxFilter::Linear;
     TextureWrap WrapS = TextureWrap::Repeat;
     TextureWrap WrapT = TextureWrap::Repeat;
+    TextureWrap WrapR = TextureWrap::Repeat;
     glm::vec4 BorderColor = glm::vec4{0.0f, 0.0f, 0.0f, 0.0f};
     bool GenerateMipMap = true;
 
     TextureOptions() {}
+
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr,
+                   glm::vec4 bc, bool genMipMap) {
+        MinFilter = minF;
+        MaxFilter = maxF;
+        WrapS = ws;
+        WrapT = wt;
+        WrapR = wr;
+        BorderColor = bc;
+        GenerateMipMap = genMipMap;
+    }
 
     TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, glm::vec4 bc,
                    bool genMipMap) {
@@ -61,6 +73,14 @@ struct TextureOptions {
         MaxFilter = maxF;
         WrapS = ws;
         WrapT = wt;
+    }
+
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr) {
+        MinFilter = minF;
+        MaxFilter = maxF;
+        WrapS = ws;
+        WrapT = wt;
+        WrapR = wr;
     }
 
     TextureOptions(TextureWrap wrapS, TextureWrap wrapT, bool genMipMap = true) {
@@ -114,4 +134,17 @@ class Texture {
 
    private:
     void init(unsigned char* data, const TextureOptions options);
+};
+
+class CubeMap {
+   private:
+    unsigned int m_ReferenceID;
+    std::string m_FilePaths[6];
+
+   public:
+    CubeMap(const std::string filePaths[6], const TextureOptions options = TextureOptions());
+    ~CubeMap();
+
+    void Bind(const unsigned int slot = 0, const bool activate = true) const;
+    void Unbind() const;
 };

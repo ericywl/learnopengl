@@ -444,6 +444,17 @@ int renderDepthTestScene() {
          1.0f, -1.0f,  1.0f, 0.0f,
          1.0f,  1.0f,  1.0f, 1.0f
     };
+
+    float smallerQuadVertices[] = {
+        // positions   // texture coords
+         0.3f,  1.0f,  1.0f, 1.0f,
+         0.3f,  0.3f,  1.0f, 0.0f,
+         1.0f,  0.3f,  0.0f, 0.0f,
+
+         0.3f,  1.0f,  1.0f, 1.0f,
+         1.0f,  0.3f,  0.0f, 0.0f,
+         1.0f,  1.0f,  0.0f, 1.0f
+    };
     // clang-format on
 
     Shader normalShader("data/shaders/depth.vert", "data/shaders/depth.frag");
@@ -473,6 +484,10 @@ int renderDepthTestScene() {
     VertexBuffer quadVBO(quadVertices, (unsigned int)sizeof(quadVertices));
     VertexArray quadVAO;
     quadVAO.AddBuffer(quadVBO, screenLayout);
+
+    VertexBuffer smallerQuadVBO(smallerQuadVertices, (unsigned int)sizeof(smallerQuadVertices));
+    VertexArray smallerQuadVAO;
+    smallerQuadVAO.AddBuffer(smallerQuadVBO, screenLayout);
 
     std::vector<glm::vec3> windowPositions{
         glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f), glm::vec3(0.0f, 0.0f, 0.7f),
@@ -644,6 +659,7 @@ int renderDepthTestScene() {
             screenTex.Bind(0);
             screenShader.Bind();
             renderer.Draw(quadVAO, 6);
+            renderer.Draw(smallerQuadVAO, 6);
 
             // Reset depth testing and blending since we disabled it to draw screen quad
             renderer.SetDepthTest(true);
@@ -657,6 +673,10 @@ int renderDepthTestScene() {
         window.PollEvents();
     }
 
+    return 0;
+}
+
+int renderSkyBox() {
     return 0;
 }
 

@@ -66,5 +66,5 @@ void main() {
 	vec4 greyScale = vec4(weightedAvg, weightedAvg, weightedAvg, 1.0);
 
 	// Final result
-	fragColor = kernelEffect();
+	fragColor = texColor;
 }
