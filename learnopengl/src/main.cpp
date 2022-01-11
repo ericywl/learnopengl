@@ -493,7 +493,7 @@ int renderDepthTestScene() {
     screenShader.SetUniform1i("u_ScreenTexture", 0);
 
     // Load all the textures
-    Texture cubeTex("data/textures/marble.jpg");
+    Texture cubeTex("data/textures/container.jpg");
     Texture floorTex("data/textures/metal.png");
     Texture grassTex("data/textures/grass.png", TextureOptions(TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
     Texture windowTex("data/textures/blending_transparent_window.png",
