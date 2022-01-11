@@ -63,14 +63,16 @@ struct TextureOptions {
         WrapT = wt;
     }
 
-    TextureOptions(TextureWrap wrapS, TextureWrap wrapT) {
+    TextureOptions(TextureWrap wrapS, TextureWrap wrapT, bool genMipMap = true) {
         WrapS = wrapS;
         WrapT = wrapT;
+        GenerateMipMap = genMipMap;
     }
 
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF) {
+    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, bool genMipMap = true) {
         MinFilter = minF;
         MaxFilter = maxF;
+        GenerateMipMap = genMipMap;
     }
 };
 

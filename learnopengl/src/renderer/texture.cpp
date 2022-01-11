@@ -55,8 +55,10 @@ void Texture::init(unsigned char* data, const TextureOptions options) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
 
     // Set border color
-    float bc[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b, options.BorderColor.a};
-    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
+    if (options.BorderColor.a > 0.0f) {
+        float bc[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b, options.BorderColor.a};
+        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
+    }
 
     // Create texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);

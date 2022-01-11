@@ -6,6 +6,7 @@
 #include <renderer/fbo.h>
 #include <renderer/ibo.h>
 #include <renderer/light.h>
+#include <renderer/rbo.h>
 #include <renderer/renderer.h>
 #include <renderer/shader.h>
 #include <renderer/texture.h>
@@ -431,11 +432,23 @@ int renderDepthTestScene() {
         1.0f, -0.5f,  0.0f,  1.0f,  0.0f,
         1.0f,  0.5f,  0.0f,  1.0f,  1.0f
     };
+
+    // vertex attributes for a quad that fills the entire screen in Normalized Device Coordinates.
+    float quadVertices[] = {
+        // positions   // texture coords
+        -1.0f,  1.0f,  0.0f, 1.0f,
+        -1.0f, -1.0f,  0.0f, 0.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+
+        -1.0f,  1.0f,  0.0f, 1.0f,
+         1.0f, -1.0f,  1.0f, 0.0f,
+         1.0f,  1.0f,  1.0f, 1.0f
+    };
     // clang-format on
 
     Shader normalShader("data/shaders/depth.vert", "data/shaders/depth.frag");
     Shader singleColorShader("data/shaders/depth.vert", "data/shaders/single_color.frag");
-    normalShader.Bind();
+    Shader screenShader("data/shaders/screen.vert", "data/shaders/screen.frag");
 
     VertexBufferLayout layout;
     layout.Push<float>(3);
@@ -453,34 +466,45 @@ int renderDepthTestScene() {
     VertexArray windowVAO;
     windowVAO.AddBuffer(windowVBO, layout);
 
+    VertexBufferLayout screenLayout;
+    screenLayout.Push<float>(2);
+    screenLayout.Push<float>(2);
+
+    VertexBuffer quadVBO(quadVertices, (unsigned int)sizeof(quadVertices));
+    VertexArray quadVAO;
+    quadVAO.AddBuffer(quadVBO, screenLayout);
+
     std::vector<glm::vec3> windowPositions{
         glm::vec3(-1.5f, 0.0f, -0.48f), glm::vec3(1.5f, 0.0f, 0.51f), glm::vec3(0.0f, 0.0f, 0.7f),
         glm::vec3(-0.3f, 0.0f, -2.3f),  glm::vec3(0.5f, 0.0f, -0.6f),
     };
 
-    /*
-    {
-        Texture screenTex(nullptr, SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::Attachment,
-                          TextureOptions(TextureMinFilter::Linear, TextureMaxFilter::Linear));
-        FrameBuffer fbo;
-        fbo.AddTextureAttachment(screenTex, 0);
-        fbo.Unbind();
+    // Framebuffer related
+    FrameBuffer fbo;
+    Texture screenTex(nullptr, SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::Attachment,
+                      TextureOptions(TextureMinFilter::Linear, TextureMaxFilter::Linear, false));
+    fbo.AddTextureAttachment(screenTex, 0);
+    RenderBuffer rbo(RenderBufferType::Depth24Stencil8, SCREEN_WIDTH, SCREEN_HEIGHT);
+    fbo.AddRenderBufferAttachment(AttachmentType::DepthStencil, rbo);
+    if (!fbo.IsComplete()) {
+        spdlog::warn("[FrameBuffer Warn] FrameBuffer incompelete");
     }
-    */
+    screenShader.Bind();
+    screenShader.SetUniform1i("u_ScreenTexture", 0);
 
+    // Load all the textures
     Texture cubeTex("data/textures/marble.jpg");
     Texture floorTex("data/textures/metal.png");
     Texture grassTex("data/textures/grass.png", TextureOptions(TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
     Texture windowTex("data/textures/blending_transparent_window.png",
                       TextureOptions(TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
+    normalShader.Bind();
     normalShader.SetUniform1i("u_Texture1", 0);
 
     Renderer renderer;
+    renderer.SetLineMode(false);
     // Blending
     renderer.SetBlending(true);
-    // Face culling
-    renderer.SetFaceCulling(false);
-    renderer.SetCulledFace(CulledFace::Back);
     // Depth testing
     renderer.SetDepthTest(true);
     renderer.SetDepthFunc(TestFunc::Less);
@@ -489,6 +513,9 @@ int renderDepthTestScene() {
     // If any test fail, we do nothing aka. keep the value
     // If both test succeeds, replace the stencil buffer value
     renderer.SetStencilAction(TestAction::Keep, TestAction::Keep, TestAction::Replace);
+    // Face culling
+    renderer.SetFaceCulling(false);
+    renderer.SetCulledFace(CulledFace::Back);
 
     // Camera
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -498,26 +525,26 @@ int renderDepthTestScene() {
     // Frustum clipping planes
     const float nearPlane = 0.1f;
     const float farPlane = 100.0f;
-    normalShader.SetUniform1f("u_Near", nearPlane);
-    normalShader.SetUniform1f("u_Far", farPlane);
+    // normalShader.SetUniform1f("u_Near", nearPlane);
+    // normalShader.SetUniform1f("u_Far", farPlane);
 
     // Rendering loop
     while (!window.ShouldClose()) {
-        // Clear screen
-        renderer.Clear();
-        processWindowInputs(window);
+        // Frame time calculation
         double currentTime = Time::GetTime();
-
-        // Projection matrix
-        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, nearPlane, farPlane);
-
-        // View matrix (reverse direction of where camera moves)
         deltaTime = currentTime - lastTime;
         lastTime = currentTime;
-        processCameraInputs(camera, (float)deltaTime);
-        glm::mat4 view = camera.ViewMatrix();
 
-        // Set matrices
+        // Clear screen
+        renderer.SetClearColor(0.1f, 0.1f, 0.1f, 0.1f);
+        renderer.Clear(ClearBit::Color | ClearBit::Depth);
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        // Projection and view matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, nearPlane, farPlane);
+        glm::mat4 view = camera.ViewMatrix();
+        normalShader.Bind();
         normalShader.SetUniformMatrix4f("u_View", view);
         normalShader.SetUniformMatrix4f("u_Projection", projection);
 
@@ -603,6 +630,26 @@ int renderDepthTestScene() {
                 normalShader.SetUniformMatrix4f("u_Model", model);
                 renderer.Draw(windowVAO, 6);
             }
+        }
+
+        {
+            fbo.Unbind();
+            // Disable depth testing so that screen quad isn't discarded due to depth test
+            renderer.SetDepthTest(false);
+            // Disable blending so that screen quad doesn't get blended
+            renderer.SetBlending(false);
+            renderer.SetClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+            renderer.Clear(ClearBit::Color);
+
+            screenTex.Bind(0);
+            screenShader.Bind();
+            renderer.Draw(quadVAO, 6);
+
+            // Reset depth testing and blending since we disabled it to draw screen quad
+            renderer.SetDepthTest(true);
+            renderer.SetBlending(true);
+            // Reset framebuffer so that we would draw the next scene onto it
+            fbo.Bind();
         }
 
         // Swap buffers and check events
