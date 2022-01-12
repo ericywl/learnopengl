@@ -311,8 +311,9 @@ int renderBackpackModel() {
     double lastTimeF = Time::GetTime();
     int nbFrames = 0;
 
-    Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
     Model backpack("data/models/backpack/backpack.obj");
+    Shader bpShader("data/shaders/explode.vert", "data/shaders/basic.frag", "data/shaders/explode.geom");
+    bpShader.Bind();
 
     // Rendering loop
     while (!window.ShouldClose()) {
@@ -320,6 +321,7 @@ int renderBackpackModel() {
         renderer.Clear();
         processWindowInputs(window);
         double currentTime = Time::GetTime();
+        bpShader.SetUniform1f("u_Time", (float)currentTime);
 
         {
             // Framerate calculation
@@ -346,7 +348,6 @@ int renderBackpackModel() {
         model = glm::scale(model, glm::vec3(1.0f));
 
         // Draw backpack model
-        bpShader.Bind();
         bpShader.SetUniformMatrix4f("u_Projection", projection);
         bpShader.SetUniformMatrix4f("u_View", view);
         bpShader.SetUniformMatrix4f("u_Model", model);
@@ -412,6 +413,7 @@ int renderDepthTestScene() {
         -0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
         -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
+
     float planeVertices[] = {
         // positions          // texture coords
         // (note texture coords are higher than 1 (together with GL_REPEAT as texture wrapping mode). this will cause the floor texture to repeat)
@@ -944,5 +946,5 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderUniformBufferTest();
+    return renderBackpackModel();
 }

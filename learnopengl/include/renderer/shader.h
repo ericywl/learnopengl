@@ -10,7 +10,8 @@ class Shader {
     std::unordered_map<std::string, int> m_UniformLocationCache;
 
    public:
-    Shader(const std::string &vertexFilePath, const std::string &fragmentFilePath);
+    Shader(const std::string &vertexFilePath, const std::string &fragmentFilePath,
+           const std::string &geometryFilePath = "");
     ~Shader();
 
     void Bind() const;
@@ -28,5 +29,5 @@ class Shader {
     int getUniformLocation(const std::string &name);
     const std::string parseShader(const std::string &filepath);
     unsigned int compileShader(const unsigned int type, const std::string &sourceVal);
-    unsigned int createProgram(unsigned int vertexShader, unsigned int fragmentShader);
+    unsigned int createProgram(unsigned int vertexShader, unsigned int fragmentShader, unsigned int geometryShader);
 };

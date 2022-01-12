@@ -45,11 +45,15 @@ unsigned int Shader::compileShader(const unsigned int type, const std::string &s
     return id;
 }
 
-unsigned int Shader::createProgram(unsigned int vertexShader, unsigned int fragmentShader) {
+unsigned int Shader::createProgram(unsigned int vertexShader, unsigned int fragmentShader,
+                                   unsigned int geometryShader) {
     unsigned int program = glCreateProgram();
 
     glAttachShader(program, vertexShader);
     glAttachShader(program, fragmentShader);
+    if (geometryShader > 0) {
+        glAttachShader(program, geometryShader);
+    }
 
     int result;
     glLinkProgram(program);
@@ -80,17 +84,26 @@ unsigned int Shader::createProgram(unsigned int vertexShader, unsigned int fragm
 }
 
 /* Shader compiles the shaders from provided sources and links it to a program */
-Shader::Shader(const std::string &vertexFilePath, const std::string &fragmentFilePath) : m_ReferenceID(0) {
+Shader::Shader(const std::string &vertexFilePath, const std::string &fragmentFilePath,
+               const std::string &geometryFilePath)
+    : m_ReferenceID(0) {
     // Parse and compile each shader
     unsigned int vs = compileShader(GL_VERTEX_SHADER, Shader::parseShader(vertexFilePath));
     unsigned int fs = compileShader(GL_FRAGMENT_SHADER, Shader::parseShader(fragmentFilePath));
+    unsigned int gs = 0;
+    if (geometryFilePath != "") {
+        gs = compileShader(GL_GEOMETRY_SHADER, Shader::parseShader(geometryFilePath));
+    }
 
     // Create shader program
-    unsigned int program = createProgram(vs, fs);
+    unsigned int program = createProgram(vs, fs, gs);
 
     // We can clear shader intermediates after linking them to program
     glDeleteShader(vs);
     glDeleteShader(fs);
+    if (gs > 0) {
+        glDeleteShader(gs);
+    }
 
     m_ReferenceID = program;
 }
