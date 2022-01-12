@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <string>
 
-enum class TextureMaxFilter {
+enum class TextureMagFilter {
     Nearest = GL_NEAREST,
     Linear = GL_LINEAR,
 };
@@ -38,49 +38,31 @@ enum class TextureType {
 
 struct TextureOptions {
     TextureMinFilter MinFilter = TextureMinFilter::NearestMipMapLinear;
-    TextureMaxFilter MaxFilter = TextureMaxFilter::Linear;
+    TextureMagFilter MaxFilter = TextureMagFilter::Linear;
     TextureWrap WrapS = TextureWrap::Repeat;
     TextureWrap WrapT = TextureWrap::Repeat;
     TextureWrap WrapR = TextureWrap::Repeat;
-    glm::vec4 BorderColor = glm::vec4{0.0f, 0.0f, 0.0f, 0.0f};
     bool GenerateMipMap = true;
 
     TextureOptions() {}
 
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr,
-                   glm::vec4 bc, bool genMipMap) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr,
+                   bool genMipMap = true) {
         MinFilter = minF;
         MaxFilter = maxF;
         WrapS = ws;
         WrapT = wt;
         WrapR = wr;
-        BorderColor = bc;
         GenerateMipMap = genMipMap;
     }
 
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, glm::vec4 bc,
-                   bool genMipMap) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, TextureWrap ws, TextureWrap wt,
+                   bool genMipMap = true) {
         MinFilter = minF;
         MaxFilter = maxF;
         WrapS = ws;
         WrapT = wt;
-        BorderColor = bc;
         GenerateMipMap = genMipMap;
-    }
-
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt) {
-        MinFilter = minF;
-        MaxFilter = maxF;
-        WrapS = ws;
-        WrapT = wt;
-    }
-
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr) {
-        MinFilter = minF;
-        MaxFilter = maxF;
-        WrapS = ws;
-        WrapT = wt;
-        WrapR = wr;
     }
 
     TextureOptions(TextureWrap wrapS, TextureWrap wrapT, bool genMipMap = true) {
@@ -89,7 +71,7 @@ struct TextureOptions {
         GenerateMipMap = genMipMap;
     }
 
-    TextureOptions(TextureMinFilter minF, TextureMaxFilter maxF, bool genMipMap = true) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, bool genMipMap = true) {
         MinFilter = minF;
         MaxFilter = maxF;
         GenerateMipMap = genMipMap;
@@ -104,13 +86,13 @@ class Texture {
     TextureType m_Type;
 
    public:
-    Texture(const std::string& filePath, const TextureType type, const TextureOptions options);
+    Texture(const std::string& filePath, const TextureType type, const TextureOptions& options);
     Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
-            const TextureType type, const TextureOptions options);
+            const TextureType type, const TextureOptions& options);
     ~Texture();
     // Helper constructors
     Texture(const std::string& filePath) : Texture(filePath, TextureType::Texture, TextureOptions()) {}
-    Texture(const std::string& filePath, const TextureOptions opts) : Texture(filePath, TextureType::Texture, opts) {}
+    Texture(const std::string& filePath, const TextureOptions& opts) : Texture(filePath, TextureType::Texture, opts) {}
     Texture(const std::string& filePath, const TextureType type) : Texture(filePath, type, TextureOptions()) {}
 
     void Bind(const unsigned int slot = 0, const bool activate = true) const;
@@ -133,7 +115,7 @@ class Texture {
     }
 
    private:
-    void init(unsigned char* data, const TextureOptions options);
+    void init(unsigned char* data, const TextureOptions& options);
 };
 
 class CubeMap {
@@ -142,7 +124,7 @@ class CubeMap {
     std::string m_FilePaths[6];
 
    public:
-    CubeMap(const std::string filePaths[6], const TextureOptions options = TextureOptions());
+    CubeMap(const std::string filePaths[6], const TextureOptions& options = TextureOptions());
     ~CubeMap();
 
     void Bind(const unsigned int slot = 0, const bool activate = true) const;

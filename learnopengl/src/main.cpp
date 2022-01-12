@@ -152,7 +152,7 @@ int renderLightsAndCubes() {
     // Initialize and set texture in shader
     TextureOptions texOpts = {
         TextureMinFilter::Nearest,
-        TextureMaxFilter::Nearest,
+        TextureMagFilter::Nearest,
         TextureWrap::Repeat,
         TextureWrap::Repeat,
     };
@@ -497,7 +497,7 @@ int renderDepthTestScene() {
     // Framebuffer related
     FrameBuffer fbo;
     Texture screenTex(nullptr, SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::Attachment,
-                      TextureOptions(TextureMinFilter::Linear, TextureMaxFilter::Linear, false));
+                      TextureOptions(TextureMinFilter::Linear, TextureMagFilter::Linear, false));
     fbo.AddTextureAttachment(screenTex, 0);
     RenderBuffer rbo(RenderBufferType::Depth24Stencil8, SCREEN_WIDTH, SCREEN_HEIGHT);
     fbo.AddRenderBufferAttachment(AttachmentType::DepthStencil, rbo);
@@ -677,6 +677,138 @@ int renderDepthTestScene() {
 }
 
 int renderSkyBox() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    // clang-format off
+    float skyboxVertices[] = {
+		// positions          
+		-1.0f,  1.0f, -1.0f,
+		-1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f, -1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+
+		-1.0f, -1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f,
+		-1.0f, -1.0f,  1.0f,
+
+		-1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f, -1.0f,
+		 1.0f,  1.0f,  1.0f,
+		 1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f,  1.0f,
+		-1.0f,  1.0f, -1.0f,
+
+		-1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f, -1.0f,
+		 1.0f, -1.0f, -1.0f,
+		-1.0f, -1.0f,  1.0f,
+		 1.0f, -1.0f,  1.0f
+	};
+    // clang-format on
+
+    VertexBuffer skyboxVBO(skyboxVertices, (unsigned int)sizeof(skyboxVertices));
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    VertexArray skyboxVAO;
+    skyboxVAO.AddBuffer(skyboxVBO, layout);
+
+    const std::string faces[] = {
+        "data/textures/skybox/right.jpg",  "data/textures/skybox/left.jpg",  "data/textures/skybox/top.jpg",
+        "data/textures/skybox/bottom.jpg", "data/textures/skybox/front.jpg", "data/textures/skybox/back.jpg",
+    };
+    CubeMap skyboxMap(faces,
+                      TextureOptions(TextureMinFilter::Linear, TextureMagFilter::Linear, TextureWrap::ClampToEdge,
+                                     TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
+    Model backpack("data/models/backpack/backpack.obj");
+
+    Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    Shader skyboxShader("data/shaders/skybox.vert", "data/shaders/skybox.frag");
+    skyboxShader.Bind();
+    skyboxShader.SetUniform1i("u_Cubemap", 0);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+
+    // Rendering loop
+    while (!window.ShouldClose()) {
+        // Frame-time related calculations
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // Clear screen
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        // Projection matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+        {
+            // View matrix
+            glm::mat4 view = camera.ViewMatrix();
+
+            // Model matrix
+            glm::mat4 model(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f));
+            model = glm::scale(model, glm::vec3(0.5f));
+
+            // Draw backpack model
+            bpShader.Bind();
+            bpShader.SetUniformMatrix4f("u_Projection", projection);
+            bpShader.SetUniformMatrix4f("u_View", view);
+            bpShader.SetUniformMatrix4f("u_Model", model);
+
+            renderer.Draw(backpack, bpShader);
+        }
+
+        {
+            renderer.SetDepthFunc(TestFunc::LessEqual);
+            // Remove translation so that skybox doesn't move around with camera
+            glm::mat4 view = glm::mat4(glm::mat3(camera.ViewMatrix()));
+
+            skyboxShader.Bind();
+            skyboxShader.SetUniformMatrix4f("u_Projection", projection);
+            skyboxShader.SetUniformMatrix4f("u_View", view);
+
+            skyboxMap.Bind();
+            renderer.Draw(skyboxVAO, 36);
+            renderer.SetDepthFunc(TestFunc::Less);
+        }
+
+        // Swap buffers and check events
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
     return 0;
 }
 
@@ -685,5 +817,5 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderDepthTestScene();
+    return renderSkyBox();
 }

@@ -5,12 +5,12 @@
 #include <filesystem>
 
 Texture::Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
-                 const TextureType type, const TextureOptions options)
+                 const TextureType type, const TextureOptions& options)
     : m_ReferenceID(0), m_FilePath(""), m_Width(w), m_Height(h), m_BPP(bpp), m_Type(type) {
     init(data, options);
 }
 
-Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions options)
+Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions& options)
     : m_ReferenceID(0), m_FilePath(filePath), m_Width(0), m_Height(0), m_BPP(0), m_Type(type) {
     // Flip the image since OpenGL expects image coordinates to start from bottom-left
     stbi_set_flip_vertically_on_load(1);
@@ -43,7 +43,7 @@ void Texture::Unbind() const {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::init(unsigned char* data, const TextureOptions options) {
+void Texture::init(unsigned char* data, const TextureOptions& options) {
     glGenTextures(1, &m_ReferenceID);
     glBindTexture(GL_TEXTURE_2D, m_ReferenceID);
 
@@ -54,12 +54,6 @@ void Texture::init(unsigned char* data, const TextureOptions options) {
     // Wrap texture coordinates
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
-
-    // Set border color
-    if (options.BorderColor.a > 0.0f) {
-        float bc[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b, options.BorderColor.a};
-        glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, bc);
-    }
 
     // Create texture
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
@@ -73,9 +67,18 @@ void Texture::init(unsigned char* data, const TextureOptions options) {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions options) {
+CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions& options) {
     glGenTextures(1, &m_ReferenceID);
     glBindTexture(GL_TEXTURE_CUBE_MAP, m_ReferenceID);
+
+    // Texture minification and magnification filters
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, (GLint)options.MinFilter);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, (GLint)options.MaxFilter);
+
+    // Wrap texture coordinates
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, (GLint)options.WrapR);
 
     int width, height, bpp;
     for (unsigned int i = 0; i < 6; i++) {
@@ -86,25 +89,13 @@ CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions options) {
             throw "Cannot load texture image";
         }
 
-        // Texture minification and magnification filters
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, (GLint)options.MinFilter);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, (GLint)options.MaxFilter);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        stbi_image_free(data);
+    }
 
-        // Wrap texture coordinates
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
-        glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, (GLint)options.WrapR);
-
-        // Set border color
-        if (options.BorderColor.a > 0.0f) {
-            float bc[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b, options.BorderColor.a};
-            glTexParameterfv(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_BORDER_COLOR, bc);
-        }
-
-        // Generate mip-map
-        if (options.GenerateMipMap) {
-            glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-        }
+    // Generate mip-map
+    if (options.GenerateMipMap) {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
 
     // Unbind texture and free the local buffer
