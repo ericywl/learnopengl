@@ -10,12 +10,14 @@
 #include <renderer/renderer.h>
 #include <renderer/shader.h>
 #include <renderer/texture.h>
+#include <renderer/ubo.h>
 #include <renderer/vao.h>
 #include <renderer/vbo.h>
 #include <scene/model.h>
 
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
 #include <map>
 
 #define DEBUG
@@ -774,6 +776,7 @@ int renderSkyBox() {
 
         // Projection matrix
         glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+
         {
             // View matrix
             glm::mat4 view = camera.ViewMatrix();
@@ -817,10 +820,129 @@ int renderSkyBox() {
     return 0;
 }
 
+int renderUniformBufferTest() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    // clang-format off
+    float cubeVertices[] = {
+        // positions         
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f, -0.5f,  
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f, -0.5f,  0.5f, 
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f,  0.5f,  0.5f, 
+
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+
+        -0.5f, -0.5f, -0.5f, 
+         0.5f, -0.5f, -0.5f,  
+         0.5f, -0.5f,  0.5f,  
+         0.5f, -0.5f,  0.5f,  
+        -0.5f, -0.5f,  0.5f, 
+        -0.5f, -0.5f, -0.5f, 
+
+        -0.5f,  0.5f, -0.5f, 
+         0.5f,  0.5f, -0.5f,  
+         0.5f,  0.5f,  0.5f,  
+         0.5f,  0.5f,  0.5f,  
+        -0.5f,  0.5f,  0.5f, 
+        -0.5f,  0.5f, -0.5f,
+    };
+    // clang-format on
+
+    Shader shader("data/shaders/ubo_test.vert", "data/shaders/ubo_test.frag");
+    shader.Bind();
+
+    VertexBuffer cubeVBO(cubeVertices, (unsigned int)sizeof(cubeVertices));
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    VertexArray cubeVAO;
+    cubeVAO.AddBuffer(cubeVBO, layout);
+
+    // Uniform buffers are shared across all shaders!
+    UniformBuffer matricesUBO(3 * sizeof(glm::mat4));
+    // This binding corresponds to the binding that is written in the shader (binding = 2)
+    matricesUBO.BindRange(0, 3 * sizeof(glm::mat4), 2);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+
+    glm::vec3 positionsAndColors[] = {
+        glm::vec3(-0.75f, 0.75f, 0.0f), glm::vec3(1.0f, 0.0f, 0.0f),     glm::vec3(0.75f, 0.75f, 0.0f),
+        glm::vec3(0.0f, 1.0f, 0.0f),    glm::vec3(-0.75f, -0.75f, 0.0f), glm::vec3(1.0f, 1.0f, 0.0f),
+        glm::vec3(0.75f, -0.75f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f),
+    };
+
+    while (!window.ShouldClose()) {
+        // Frame-time related calculations
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        // Clear screen
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        {
+            // Projection matrix
+            glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+            matricesUBO.InsertData(0, glm::value_ptr(projection), sizeof(glm::mat4));
+            // View matrix
+            glm::mat4 view = camera.ViewMatrix();
+            matricesUBO.InsertData(sizeof(glm::mat4), glm::value_ptr(view), sizeof(glm::mat4));
+        }
+
+        {
+            // Draw cubes
+            for (unsigned int i = 0; i < 8; i += 2) {
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), positionsAndColors[i]);
+                matricesUBO.InsertData(2 * sizeof(glm::mat4), glm::value_ptr(model), sizeof(glm::mat4));
+                shader.SetUniform4f("u_Color", glm::vec4(positionsAndColors[i + 1], 1.0f));
+                renderer.Draw(cubeVAO, 36);
+            }
+        }
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderSkyBox();
+    return renderUniformBufferTest();
 }

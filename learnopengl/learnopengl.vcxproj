@@ -159,6 +159,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\renderer\fbo.cpp" />
     <ClCompile Include="src\renderer\rbo.cpp" />
+    <ClCompile Include="src\renderer\ubo.cpp" />
     <ClCompile Include="src\scene\mesh.cpp" />
     <ClCompile Include="src\renderer\camera.cpp" />
     <ClCompile Include="src\renderer\ibo.cpp" />
@@ -321,6 +322,7 @@
     <ClInclude Include="include\core\input.h" />
     <ClInclude Include="include\renderer\fbo.h" />
     <ClInclude Include="include\renderer\rbo.h" />
+    <ClInclude Include="include\renderer\ubo.h" />
     <ClInclude Include="include\scene\mesh.h" />
     <ClInclude Include="include\renderer\camera.h" />
     <ClInclude Include="include\renderer\ibo.h" />
