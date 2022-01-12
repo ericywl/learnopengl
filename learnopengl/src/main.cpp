@@ -745,7 +745,9 @@ int renderSkyBox() {
                                      TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
     Model backpack("data/models/backpack/backpack.obj");
 
-    Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    Shader bpShader("data/shaders/env_mapping.vert", "data/shaders/env_mapping.frag");
+    bpShader.Bind();
+    bpShader.SetUniform1i("u_Skybox", 0);
     Shader skyboxShader("data/shaders/skybox.vert", "data/shaders/skybox.frag");
     skyboxShader.Bind();
     skyboxShader.SetUniform1i("u_Cubemap", 0);
@@ -786,7 +788,10 @@ int renderSkyBox() {
             bpShader.SetUniformMatrix4f("u_Projection", projection);
             bpShader.SetUniformMatrix4f("u_View", view);
             bpShader.SetUniformMatrix4f("u_Model", model);
+            bpShader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+            bpShader.SetUniform3f("u_CameraPos", camera.GetPosition());
 
+            skyboxMap.Bind();
             renderer.Draw(backpack, bpShader);
         }
 
