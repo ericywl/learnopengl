@@ -30,6 +30,7 @@ class Window {
     void SetVSync(bool on);
     void SetInputSystem(bool on);
     void SetCaptureCursor(bool on);
+    void SetMSAASamples(unsigned int samples);
 
    private:
     void fetchWindowSizeAndPosition();

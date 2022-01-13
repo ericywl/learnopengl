@@ -109,6 +109,10 @@ void Window::SetCaptureCursor(bool on) {
     }
 }
 
+void Window::SetMSAASamples(unsigned int samples) {
+    glfwWindowHint(GLFW_SAMPLES, samples);
+}
+
 void Window::fetchWindowSizeAndPosition() {
     glfwGetWindowPos(m_Window, &m_Position.first, &m_Position.second);
     glfwGetWindowSize(m_Window, &m_Size.first, &m_Size.second);

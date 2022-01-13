@@ -487,7 +487,6 @@
     <None Include="vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
-    <None Include="data\shaders\asteroid.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\core\window.h">

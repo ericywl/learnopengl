@@ -50,8 +50,10 @@ uniform vec3 u_ViewPos;
 // Fragment material
 uniform Material u_Material;
 // Lights
-uniform int u_NumPtLights;
-uniform int u_NumSpLights;
+uniform int u_NumPtLights = 0;
+uniform int u_NumSpLights = 0;
+uniform int u_EnableDirLight = 0;
+uniform int u_EnableBlinn = 0;
 uniform DirectionalLight u_DirLight;
 uniform PointLight u_PtLights[MAX_POINT_LIGHTS];
 uniform SpotLight u_SpLights[MAX_SPOT_LIGHTS];
@@ -69,8 +71,14 @@ vec3 CalcBasicLight(BasicLight innerLight, vec3 dirToLight, vec3 norm, vec3 view
 
     // Specular
     // Flip the direction to light and reflect against vertex normal to get the direction of light reflection
-    vec3 reflectDir = reflect(-dirToLight, normalize(v_Normal));
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), u_Material.shininess);
+    float spec = 0.0;
+    if (u_EnableBlinn > 0) {
+        vec3 halfwayDir = normalize(dirToLight + viewDir);
+        spec = pow(max(dot(norm, halfwayDir), 0.0), u_Material.shininess * 2);
+    } else {
+		vec3 reflectDir = reflect(-dirToLight, normalize(v_Normal));
+		spec = pow(max(dot(viewDir, reflectDir), 0.0), u_Material.shininess);
+    }
     vec3 specularLight = innerLight.specular * spec * vec3(texture(u_Material.specular, v_TexCoord));
 
     return ambientLight + diffuseLight + specularLight;
@@ -119,7 +127,10 @@ void main() {
 	vec3 viewDir = normalize(u_ViewPos - v_FragPos);
 
     // Calculate contribution from all light sources
-    vec3 light = CalcDirectionalLightContribution(u_DirLight, norm, viewDir);
+    vec3 light = vec3(0.0);
+    if (u_EnableDirLight > 0) {
+		light += CalcDirectionalLightContribution(u_DirLight, norm, viewDir);
+    }
     for (int i = 0; i < u_NumPtLights; i++) {
 		light += CalcPointLightContribution(u_PtLights[i], norm, viewDir);
     }

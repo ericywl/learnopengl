@@ -1,6 +1,7 @@
 #include <renderer/light.h>
 
 void Lighting::SetDirectionalLight(Shader& shader, const std::string& name, const DirectionalLight& directLight) {
+    shader.SetUniform1i("u_EnableDirLight", 1);
     shader.SetUniform3f(name + ".inner.ambient", directLight.Inner.Ambient());
     shader.SetUniform3f(name + ".inner.diffuse", directLight.Inner.Diffuse());
     shader.SetUniform3f(name + ".inner.specular", directLight.Inner.Specular());

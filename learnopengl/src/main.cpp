@@ -1133,10 +1133,110 @@ int renderInstancedAsteroids() {
     return 0;
 }
 
+int renderBlinnPhongLight() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    // clang-format off
+    float planeVertices[] = {
+        // positions            // normals         // texcoords
+         10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+        -10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+        -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+
+         10.0f, -0.5f,  10.0f,  0.0f, 1.0f, 0.0f,  10.0f,  0.0f,
+        -10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,   0.0f, 10.0f,
+         10.0f, -0.5f, -10.0f,  0.0f, 1.0f, 0.0f,  10.0f, 10.0f
+    };
+    // clang-format on
+
+    VertexBuffer planeVBO(planeVertices, (unsigned int)sizeof(planeVertices));
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+    layout.Push<float>(2);
+    VertexArray planeVAO;
+    planeVAO.AddBuffer(planeVBO, layout);
+
+    TextureOptions texOpts = {
+        TextureMinFilter::Nearest,
+        TextureMagFilter::Nearest,
+        TextureWrap::Repeat,
+        TextureWrap::Repeat,
+    };
+    Texture floorTex("data/textures/wood.png");
+    Texture simpleSpecTex("data/textures/white_specular.png");
+    floorTex.Bind(0);
+    simpleSpecTex.Bind(1);
+
+    Shader floorShader("data/shaders/phong.vert", "data/shaders/phong.frag");
+    floorShader.Bind();
+    floorShader.SetUniform1i("u_Material.diffuse", 0);
+    floorShader.SetUniform1i("u_Material.specular", 1);
+    floorShader.SetUniform1f("u_Material.shininess", 1.0f);
+
+    PointLight pointLights[] = {
+        {
+            BasicLight{glm::vec3(1.0f, 1.0f, 1.0f), 0.05f, 1.0f, 0.4f},
+            glm::vec3(0.0f, 0.0f, 0.0f),
+            Attenuation(1.0f, 0.0f, 0.0f),
+        },
+    };
+
+    Lighting::SetPointLights(floorShader, "u_NumPtLights", 1, "u_PtLights", pointLights);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    Renderer renderer;
+    renderer.SetBlending(true);
+    renderer.SetDepthTest(true);
+
+    bool blinn = false;
+
+    while (!window.ShouldClose()) {
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+        if (Input::IsKeyJustPressed(Key::B)) {
+            blinn = !blinn;
+            spdlog::debug("Blinn-Phong {}", (blinn ? "enabled" : "disabled"));
+        }
+
+        // Projection and view matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+        glm::mat4 view = camera.ViewMatrix();
+        glm::mat4 model = glm::mat4(1.0);
+
+        floorShader.SetUniform1i("u_EnableBlinn", (int)blinn);
+        floorShader.SetUniform3f("u_ViewPos", camera.GetPosition());
+        floorShader.SetUniformMatrix4f("u_Projection", projection);
+        floorShader.SetUniformMatrix4f("u_View", view);
+        floorShader.SetUniformMatrix4f("u_Model", model);
+        floorShader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+
+        renderer.Draw(planeVAO, 6);
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderInstancedAsteroids();
+    return renderBlinnPhongLight();
 }

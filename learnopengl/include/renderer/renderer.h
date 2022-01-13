@@ -66,6 +66,7 @@ class Renderer {
     void SetClearColor(const float r, const float g, const float b, const float a) const;
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
+    void SetMSAA(bool on) const;
     // Depth testing
     void SetDepthTest(bool on) const;
     void SetDepthMask(bool on) const;

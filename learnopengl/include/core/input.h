@@ -23,6 +23,8 @@ enum class Key : int {
     S = GLFW_KEY_S,
     D = GLFW_KEY_D,
 
+    B = GLFW_KEY_B,
+
     LCtrl = GLFW_KEY_LEFT_CONTROL,
     RCtrl = GLFW_KEY_RIGHT_CONTROL,
     LAlt = GLFW_KEY_LEFT_ALT,

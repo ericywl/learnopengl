@@ -76,6 +76,14 @@ void Renderer::SetLineMode(bool on) const {
     }
 }
 
+void Renderer::SetMSAA(bool on) const {
+    if (on) {
+        glEnable(GL_MULTISAMPLE);
+    } else {
+        glDisable(GL_MULTISAMPLE);
+    }
+}
+
 void Renderer::SetDepthTest(bool on) const {
     if (on) {
         glEnable(GL_DEPTH_TEST);
