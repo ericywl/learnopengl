@@ -3,6 +3,7 @@
 #include <common.h>
 #include <renderer/vbo.h>
 
+#include <glm/glm.hpp>
 #include <vector>
 
 struct VertexBufferElement {
@@ -79,12 +80,13 @@ class VertexBufferLayout {
 class VertexArray {
    private:
     unsigned int m_ReferenceID;
+    unsigned int m_CurrCount;
 
    public:
     VertexArray();
     ~VertexArray();
 
-    void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout);
+    void AddBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout, const bool instanced = false);
     void Bind() const;
     void Unbind() const;
 

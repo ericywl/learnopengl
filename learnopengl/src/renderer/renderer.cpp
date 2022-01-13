@@ -24,6 +24,29 @@ void Renderer::Draw(const Model& model, Shader& shader) const {
     }
 }
 
+void Renderer::DrawInstanced(const VertexArray& va, const IndexBuffer& ib, const unsigned int instances) const {
+    va.Bind();
+    ib.Bind();
+    glDrawElementsInstanced(GL_TRIANGLES, ib.GetCount(), GL_UNSIGNED_INT, nullptr, instances);
+}
+
+void Renderer::DrawInstanced(const VertexArray& va, const unsigned int count, const unsigned int instances) const {
+    va.Bind();
+    glDrawArraysInstanced(GL_TRIANGLES, 0, count, instances);
+}
+
+void Renderer::DrawInstanced(const Mesh& mesh, Shader& shader, const unsigned int instances) const {
+    mesh.SetupDraw(shader);
+    DrawInstanced(mesh.GetVAO(), mesh.GetIBO(), instances);
+}
+
+void Renderer::DrawInstanced(const Model& model, Shader& shader, const unsigned int instances) const {
+    model.SetupDraw(shader);
+    for (std::shared_ptr<Mesh> mesh : model.GetMeshes()) {
+        DrawInstanced(*mesh, shader, instances);
+    }
+}
+
 void Renderer::Clear(ClearBit cb) const {
     glClear(static_cast<GLbitfield>(cb));
 }

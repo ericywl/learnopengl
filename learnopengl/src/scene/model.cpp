@@ -26,6 +26,12 @@ void Model::SetupDraw(Shader& shader) const {
     }
 }
 
+void Model::AddInstancedBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const {
+    for (unsigned int i = 0; i < m_Meshes.size(); i++) {
+        m_Meshes[i]->AddInstancedBuffer(vb, layout);
+    }
+}
+
 void Model::processNode(aiNode* node, const aiScene* scene) {
     // Process any meshes in the node
     for (unsigned int i = 0; i < node->mNumMeshes; i++) {

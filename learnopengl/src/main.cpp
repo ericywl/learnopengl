@@ -956,10 +956,187 @@ int renderUniformBufferTest() {
     return 0;
 }
 
+int renderInstancedQuads() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    // clang-format off
+    float quadVertices[] = {
+		// positions     // colors
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,
+		-0.05f, -0.05f,  0.0f, 0.0f, 1.0f,
+
+		-0.05f,  0.05f,  1.0f, 0.0f, 0.0f,
+		 0.05f, -0.05f,  0.0f, 1.0f, 0.0f,   
+		 0.05f,  0.05f,  0.0f, 1.0f, 1.0f
+	};
+    // clang-format on
+
+    glm::vec2 translations[100]{};
+    int index = 0;
+    float offset = 0.1f;
+    for (int y = -10; y < 10; y += 2) {
+        for (int x = -10; x < 10; x += 2) {
+            glm::vec2 translation{};
+            translation.x = (float)x / 10.0f + offset;
+            translation.y = (float)y / 10.0f + offset;
+            translations[index++] = translation;
+        }
+    }
+
+    VertexArray vao;
+    VertexBuffer quadVBO(quadVertices, (unsigned int)sizeof(quadVertices));
+    VertexBufferLayout quadLayout;
+    quadLayout.Push<float>(2);
+    quadLayout.Push<float>(3);
+    vao.AddBuffer(quadVBO, quadLayout);
+
+    VertexBuffer instanceVBO(translations, (unsigned int)sizeof(translations));
+    VertexBufferLayout instanceLayout;
+    instanceLayout.Push<float>(2);
+    vao.AddBuffer(instanceVBO, instanceLayout, true);
+
+    Renderer renderer;
+    Shader shader("data/shaders/instanced.vert", "data/shaders/instanced.frag");
+    shader.Bind();
+
+    while (!window.ShouldClose()) {
+        renderer.Clear();
+        processWindowInputs(window);
+
+        renderer.DrawInstanced(vao, 6, 100);
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
+int renderInstancedAsteroids() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    unsigned int amount = 100000;
+    glm::mat4* modelMatrices = new glm::mat4[amount];
+    srand(glfwGetTime());  // initialize random seed
+    float radius = 150.0;
+    float offset = 25.0f;
+    for (unsigned int i = 0; i < amount; i++) {
+        glm::mat4 model = glm::mat4(1.0f);
+
+        // 1. translation: displace along circle with 'radius' in range [-offset, offset]
+        float angle = (float)i / (float)amount * 360.0f;
+        float displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float x = sin(angle) * radius + displacement;
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float y = displacement * 0.4f;  // keep height of field smaller compared to width of x and z
+        displacement = (rand() % (int)(2 * offset * 100)) / 100.0f - offset;
+        float z = cos(angle) * radius + displacement;
+        model = glm::translate(model, glm::vec3(x, y, z));
+
+        // 2. scale: scale between 0.05 and 0.25f
+        float scale = (rand() % 20) / 100.0f + 0.05;
+        model = glm::scale(model, glm::vec3(scale));
+
+        // 3. rotation: add random rotation around a (semi)randomly picked rotation axis vector
+        float rotAngle = (rand() % 360);
+        model = glm::rotate(model, rotAngle, glm::vec3(0.4f, 0.6f, 0.8f));
+
+        // 4. now add to list of matrices
+        modelMatrices[i] = model;
+    }
+
+    // Model
+    Model planet("data/models/planet/planet.obj");
+    Model asteroid("data/models/asteroid/rock.obj");
+
+    VertexBuffer instanceVBO(modelMatrices, amount * sizeof(glm::mat4));
+    VertexBufferLayout instanceLayout;
+    for (unsigned int i = 0; i < 4; i++) {
+        instanceLayout.Push<float>(4);
+    }
+    asteroid.AddInstancedBuffer(instanceVBO, instanceLayout);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 10.0f, 155.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    // Shader
+    Shader planetShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    Shader asteroidShader("data/shaders/asteroid.vert", "data/shaders/basic.frag");
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+
+    // Framerate related
+    double lastTimeF = Time::GetTime();
+    int nbFrames = 0;
+
+    while (!window.ShouldClose()) {
+        double currentTime = Time::GetTime();
+        // View matrix (reverse direction of where camera moves)
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        {
+            // Framerate calculation
+            nbFrames++;
+            if (currentTime - lastTimeF >= 1.0) {
+                spdlog::debug("{} ms/frame, {} fps", 1000.0 / double(nbFrames), nbFrames);
+                nbFrames = 0;
+                lastTimeF += 1.0;
+            }
+        }
+
+        // Projection and view matrix
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 1000.0f);
+        glm::mat4 view = camera.ViewMatrix();
+
+        {
+            // Draw planet
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, glm::vec3(0.0f, -3.0f, 0.0f));
+            model = glm::scale(model, glm::vec3(4.0f, 4.0f, 4.0f));
+
+            planetShader.Bind();
+            planetShader.SetUniformMatrix4f("u_Projection", projection);
+            planetShader.SetUniformMatrix4f("u_View", view);
+            planetShader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(planet, planetShader);
+        }
+
+        {
+            // Draw asteroids
+            asteroidShader.Bind();
+            asteroidShader.SetUniformMatrix4f("u_Projection", projection);
+            asteroidShader.SetUniformMatrix4f("u_View", view);
+            renderer.DrawInstanced(asteroid, asteroidShader, amount);
+        }
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderBackpackModel();
+    return renderInstancedAsteroids();
 }

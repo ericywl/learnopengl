@@ -19,6 +19,7 @@ class Model {
     Model(const std::string& filePath);
 
     void SetupDraw(Shader& shader) const;
+    void AddInstancedBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const;
 
     inline std::vector<std::shared_ptr<Mesh>> GetMeshes() const {
         return m_Meshes;

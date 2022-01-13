@@ -47,3 +47,7 @@ void Mesh::SetupDraw(Shader& shader) const {
         shader.SetUniform1i(name, i);
     }
 }
+
+void Mesh::AddInstancedBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const {
+    m_VAO->AddBuffer(vb, layout, true);
+}

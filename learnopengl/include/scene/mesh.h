@@ -31,6 +31,7 @@ class Mesh {
          std::vector<std::shared_ptr<Texture>> textures);
 
     void SetupDraw(Shader& shader) const;
+    void AddInstancedBuffer(const VertexBuffer& vb, const VertexBufferLayout& layout) const;
 
     inline const VertexBuffer& GetVBO() const {
         return *m_VBO;

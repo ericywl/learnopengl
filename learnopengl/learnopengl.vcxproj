@@ -176,9 +176,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include=".clang-format" />
-    <None Include="data\shaders\normal_viz.frag" />
-    <None Include="data\shaders\normal_viz.geom" />
-    <None Include="data\shaders\normal_viz.vert" />
+    <None Include="data\shaders\asteroid.vert" />
     <None Include="README.md" />
     <None Include="vendor\glm\detail\func_common.inl" />
     <None Include="vendor\glm\detail\func_common_simd.inl" />

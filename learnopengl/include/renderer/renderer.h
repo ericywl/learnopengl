@@ -56,6 +56,10 @@ class Renderer {
     void Draw(const VertexArray& va, const unsigned int count) const;
     void Draw(const Mesh& mesh, Shader& shader) const;
     void Draw(const Model& model, Shader& shader) const;
+    void DrawInstanced(const VertexArray& va, const IndexBuffer& ib, const unsigned int instances) const;
+    void DrawInstanced(const VertexArray& va, const unsigned int count, const unsigned int instances) const;
+    void DrawInstanced(const Mesh& mesh, Shader& shader, const unsigned int instances) const;
+    void DrawInstanced(const Model& model, Shader& shader, const unsigned int instances) const;
     void Clear(ClearBit cb = ClearBit::All) const;
 
     void SetClearColor(const glm::vec4 color) const;
