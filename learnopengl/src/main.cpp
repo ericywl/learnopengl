@@ -312,7 +312,9 @@ int renderBackpackModel() {
     int nbFrames = 0;
 
     Model backpack("data/models/backpack/backpack.obj");
-    Shader bpShader("data/shaders/explode.vert", "data/shaders/basic.frag", "data/shaders/explode.geom");
+    Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    // Shader bpShader("data/shaders/explode.vert", "data/shaders/basic.frag", "data/shaders/explode.geom");
+    Shader normShader("data/shaders/normal_viz.vert", "data/shaders/normal_viz.frag", "data/shaders/normal_viz.geom");
     bpShader.Bind();
 
     // Rendering loop
@@ -347,11 +349,24 @@ int renderBackpackModel() {
         model = glm::translate(model, glm::vec3(0.0f));
         model = glm::scale(model, glm::vec3(1.0f));
 
-        // Draw backpack model
-        bpShader.SetUniformMatrix4f("u_Projection", projection);
-        bpShader.SetUniformMatrix4f("u_View", view);
-        bpShader.SetUniformMatrix4f("u_Model", model);
-        renderer.Draw(backpack, bpShader);
+        {
+            // Draw backpack model
+            bpShader.Bind();
+            bpShader.SetUniformMatrix4f("u_Projection", projection);
+            bpShader.SetUniformMatrix4f("u_View", view);
+            bpShader.SetUniformMatrix4f("u_Model", model);
+            renderer.Draw(backpack, bpShader);
+        }
+
+        {
+            // Draw normals
+            normShader.Bind();
+            normShader.SetUniformMatrix4f("u_Projection", projection);
+            normShader.SetUniformMatrix4f("u_View", view);
+            normShader.SetUniformMatrix4f("u_Model", model);
+            normShader.SetUniformMatrix4f("u_InvTViewModel", glm::inverseTranspose(view * model));
+            renderer.Draw(backpack, normShader);
+        }
 
         // Swap buffers and check events
         window.SwapBuffers();
