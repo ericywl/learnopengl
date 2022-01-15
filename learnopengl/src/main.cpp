@@ -68,7 +68,7 @@ void processWindowInputs(Window& window) {
     }
 }
 
-int renderLightsAndCubes() {
+int testLightsAndCubes() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -290,7 +290,7 @@ int renderLightsAndCubes() {
     return 0;
 }
 
-int renderBackpackModel() {
+int testBackpackModel() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -378,7 +378,7 @@ int renderBackpackModel() {
     return 0;
 }
 
-int renderDepthTestScene() {
+int testDepthTestScene() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -697,7 +697,7 @@ int renderDepthTestScene() {
     return 0;
 }
 
-int renderSkyBox() {
+int testSkyBox() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -839,7 +839,7 @@ int renderSkyBox() {
     return 0;
 }
 
-int renderUniformBufferTest() {
+int testUniformBuffer() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -958,7 +958,7 @@ int renderUniformBufferTest() {
     return 0;
 }
 
-int renderInstancedQuads() {
+int testInstancedQuads() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -1019,7 +1019,7 @@ int renderInstancedQuads() {
     return 0;
 }
 
-int renderInstancedAsteroids() {
+int testInstancedAsteroids() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -1135,7 +1135,7 @@ int renderInstancedAsteroids() {
     return 0;
 }
 
-int renderBlinnPhongLight() {
+int testBlinnPhongLight() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -1264,7 +1264,7 @@ void renderShadowMappingScene(Renderer& renderer, Shader& shader, VertexArray& p
     renderer.Draw(cubeVAO, 36);
 }
 
-int renderShadowMapping() {
+int testShadowMapping() {
     float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
     Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
     Window window = app.GetWindow();
@@ -1467,5 +1467,5 @@ int main() {
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderBackpackModel();
+    return testShadowMapping();
 }
