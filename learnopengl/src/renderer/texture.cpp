@@ -4,10 +4,58 @@
 
 #include <filesystem>
 
-Texture::Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
-                 const TextureType type, const TextureOptions& options)
+struct X {
+    GLenum internalFormat, externalFormat, dataType;
+};
+
+X texInit(const GLenum target, unsigned int* referenceID, const TextureType type, const TextureOptions& options) {
+    glGenTextures(1, referenceID);
+    glBindTexture(target, *referenceID);
+
+    // Texture minification and magnification filters
+    glTexParameteri(target, GL_TEXTURE_MIN_FILTER, (GLint)options.MinFilter);
+    glTexParameteri(target, GL_TEXTURE_MAG_FILTER, (GLint)options.MagFilter);
+
+    // Wrap texture coordinates
+    glTexParameteri(target, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
+    glTexParameteri(target, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
+    if (target == GL_TEXTURE_CUBE_MAP) {
+        glTexParameteri(target, GL_TEXTURE_WRAP_R, (GLint)options.WrapR);
+    }
+
+    if (options.BorderColor != glm::vec4(0.0f)) {
+        float borderColor[] = {options.BorderColor.r, options.BorderColor.g, options.BorderColor.b,
+                               options.BorderColor.a};
+        glTexParameterfv(target, GL_TEXTURE_BORDER_COLOR, borderColor);
+    }
+
+    // Customize formats and data types
+    GLenum interFormat = options.GammaCorrection ? GL_SRGB8_ALPHA8 : GL_RGBA8;
+    GLenum exterFormat = GL_RGBA;
+    GLenum dataType = GL_UNSIGNED_BYTE;
+    if (type == TextureType::DepthAttachment) {
+        interFormat = GL_DEPTH_COMPONENT;
+        exterFormat = GL_DEPTH_COMPONENT;
+        dataType = GL_FLOAT;
+    }
+
+    return {interFormat, exterFormat, dataType};
+}
+
+Texture::Texture(const unsigned int w, const unsigned int h, const unsigned int bpp, const TextureType type,
+                 const TextureOptions& options)
     : m_ReferenceID(0), m_FilePath(""), m_Width(w), m_Height(h), m_BPP(bpp), m_Type(type) {
-    init(data, options);
+    X v = texInit(GL_TEXTURE_2D, &m_ReferenceID, type, options);
+
+    // Create texture
+    glTexImage2D(GL_TEXTURE_2D, 0, v.internalFormat, m_Width, m_Height, 0, v.externalFormat, v.dataType, nullptr);
+
+    // Generate mip-map
+    if (options.GenerateMipMap) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    Unbind();
 }
 
 Texture::Texture(const std::string& filePath, const TextureType type, const TextureOptions& options)
@@ -21,7 +69,18 @@ Texture::Texture(const std::string& filePath, const TextureType type, const Text
         throw "Cannot load texture image";
     }
 
-    init(data, options);
+    X v = texInit(GL_TEXTURE_2D, &m_ReferenceID, type, options);
+
+    // Create texture
+    glTexImage2D(GL_TEXTURE_2D, 0, v.internalFormat, m_Width, m_Height, 0, v.externalFormat, v.dataType, data);
+
+    // Generate mip-map
+    if (options.GenerateMipMap) {
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+
+    // Unbind texture and free data buffer
+    Unbind();
     stbi_image_free(data);
 }
 
@@ -43,42 +102,8 @@ void Texture::Unbind() const {
     glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void Texture::init(unsigned char* data, const TextureOptions& options) {
-    glGenTextures(1, &m_ReferenceID);
-    glBindTexture(GL_TEXTURE_2D, m_ReferenceID);
-
-    // Texture minification and magnification filters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLint)options.MinFilter);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLint)options.MaxFilter);
-
-    // Wrap texture coordinates
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
-
-    // Create texture
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, m_Width, m_Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-
-    // Generate mip-map
-    if (options.GenerateMipMap) {
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-
-    // Unbind texture and free the local buffer
-    glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions& options) {
-    glGenTextures(1, &m_ReferenceID);
-    glBindTexture(GL_TEXTURE_CUBE_MAP, m_ReferenceID);
-
-    // Texture minification and magnification filters
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, (GLint)options.MinFilter);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, (GLint)options.MaxFilter);
-
-    // Wrap texture coordinates
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, (GLint)options.WrapS);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, (GLint)options.WrapT);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, (GLint)options.WrapR);
+CubeMap::CubeMap(const std::string filePaths[6], const TextureType type, const TextureOptions& options) : m_Type(type) {
+    X v = texInit(GL_TEXTURE_CUBE_MAP, &m_ReferenceID, type, options);
 
     int width, height, bpp;
     for (unsigned int i = 0; i < 6; i++) {
@@ -89,7 +114,8 @@ CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions& options) 
             throw "Cannot load texture image";
         }
 
-        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, v.internalFormat, width, height, 0, v.externalFormat,
+                     v.dataType, data);
         stbi_image_free(data);
     }
 
@@ -103,7 +129,7 @@ CubeMap::CubeMap(const std::string filePaths[6], const TextureOptions& options) 
 }
 
 CubeMap::~CubeMap() {
-    spdlog::debug("Texture {} destroyed", m_ReferenceID);
+    spdlog::debug("CubeMap {} destroyed", m_ReferenceID);
     glDeleteTextures(1, &m_ReferenceID);
 }
 

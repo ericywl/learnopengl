@@ -57,6 +57,7 @@ vec4 kernelEffect() {
 }
 
 void main() {
+    // Apply any post-processing effects here
 	vec4 texColor = texture(u_ScreenTexture, v_TexCoord);
 	// Inverse
 	vec4 inverseColor = vec4(vec3(1.0 - texColor), 1.0);

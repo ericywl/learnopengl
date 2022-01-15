@@ -67,6 +67,8 @@ class Renderer {
     void SetBlending(bool on) const;
     void SetLineMode(bool on) const;
     void SetMSAA(bool on) const;
+    void SetGammaCorrection(bool on) const;
+    void SetViewport(int width, int height) const;
     // Depth testing
     void SetDepthTest(bool on) const;
     void SetDepthMask(bool on) const;

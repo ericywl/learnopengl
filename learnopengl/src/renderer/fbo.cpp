@@ -19,12 +19,29 @@ void FrameBuffer::Unbind() const {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
-void FrameBuffer::AddTextureAttachment(const Texture& tex, const unsigned int slot, const int level) const {
+void FrameBuffer::AddColorAttachment(const Texture& tex, const unsigned int slot, const int level) const {
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + slot, GL_TEXTURE_2D, tex.GetReferenceID(), level);
+}
+
+void FrameBuffer::AddDepthAttachment(const Texture& tex, const int level) const {
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.GetReferenceID(), level);
 }
 
 void FrameBuffer::AddRenderBufferAttachment(const AttachmentType type, const RenderBuffer& rb) const {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, static_cast<GLenum>(type), GL_RENDERBUFFER, rb.GetReferenceID());
+}
+
+void FrameBuffer::SetReadBuffer(const BufferValue val) const {
+    glNamedFramebufferReadBuffer(m_ReferenceID, static_cast<GLenum>(val));
+}
+
+void FrameBuffer::SetDrawBuffer(const BufferValue val) const {
+    glNamedFramebufferDrawBuffer(m_ReferenceID, static_cast<GLenum>(val));
+}
+
+void FrameBuffer::SetReadAndDrawBuffer(const BufferValue val) const {
+    SetReadBuffer(val);
+    SetDrawBuffer(val);
 }
 
 bool FrameBuffer::IsComplete() const {

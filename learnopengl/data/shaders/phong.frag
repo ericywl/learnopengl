@@ -38,9 +38,11 @@ struct SpotLight {
 };
 
 // Inputs from vertex shader
-in vec3 v_FragPos;
-in vec3 v_Normal;
-in vec2 v_TexCoord;
+in VS_OUT {
+    vec3 fragPos;
+    vec3 normal;
+    vec2 texCoord;
+} fs_in;
 
 #define MAX_POINT_LIGHTS 4
 #define MAX_SPOT_LIGHTS 4
@@ -63,11 +65,11 @@ out vec4 fragColor;
 
 vec3 CalcBasicLight(BasicLight innerLight, vec3 dirToLight, vec3 norm, vec3 viewDir) {
     // Ambient
-    vec3 ambientLight = innerLight.ambient * vec3(texture(u_Material.diffuse, v_TexCoord));
+    vec3 ambientLight = innerLight.ambient * vec3(texture(u_Material.diffuse, fs_in.texCoord));
 
     // Diffuse
     float diff = max(dot(norm, dirToLight), 0.0);
-    vec3 diffuseLight = innerLight.diffuse * diff * vec3(texture(u_Material.diffuse, v_TexCoord));
+    vec3 diffuseLight = innerLight.diffuse * diff * vec3(texture(u_Material.diffuse, fs_in.texCoord));
 
     // Specular
     // Flip the direction to light and reflect against vertex normal to get the direction of light reflection
@@ -76,22 +78,22 @@ vec3 CalcBasicLight(BasicLight innerLight, vec3 dirToLight, vec3 norm, vec3 view
         vec3 halfwayDir = normalize(dirToLight + viewDir);
         spec = pow(max(dot(norm, halfwayDir), 0.0), u_Material.shininess * 2);
     } else {
-		vec3 reflectDir = reflect(-dirToLight, normalize(v_Normal));
+		vec3 reflectDir = reflect(-dirToLight, normalize(fs_in.normal));
 		spec = pow(max(dot(viewDir, reflectDir), 0.0), u_Material.shininess);
     }
-    vec3 specularLight = innerLight.specular * spec * vec3(texture(u_Material.specular, v_TexCoord));
+    vec3 specularLight = innerLight.specular * spec * vec3(texture(u_Material.specular, fs_in.texCoord));
 
     return ambientLight + diffuseLight + specularLight;
 }
 
 float CalcAttenuation(vec3 lightPos, Attenuation atten) {
-    float dist = length(lightPos - v_FragPos);
+    float dist = length(lightPos - fs_in.fragPos);
 
     return 1.0 / (atten.constant + atten.linear * dist + atten.quadratic * (dist * dist));
 }
 
 vec3 CalcPointLightContribution(PointLight ptLight, vec3 norm, vec3 viewDir) {
-    vec3 dirToLight = normalize(ptLight.position - v_FragPos);
+    vec3 dirToLight = normalize(ptLight.position - fs_in.fragPos);
     vec3 light = CalcBasicLight(ptLight.inner, dirToLight, norm, viewDir);
     float attenuation = CalcAttenuation(ptLight.position, ptLight.atten);
 
@@ -105,7 +107,7 @@ vec3 CalcDirectionalLightContribution(DirectionalLight dLight, vec3 norm, vec3 v
 }
 
 vec3 CalcSpotLightContribution(SpotLight spLight, vec3 norm, vec3 viewDir) {
-    vec3 dirToLight = normalize(spLight.position - v_FragPos);
+    vec3 dirToLight = normalize(spLight.position - fs_in.fragPos);
     float theta = dot(dirToLight, -spLight.direction);
     float attenuation = CalcAttenuation(spLight.position, spLight.atten);
 
@@ -122,9 +124,9 @@ vec3 CalcSpotLightContribution(SpotLight spLight, vec3 norm, vec3 viewDir) {
 }
 
 void main() {
-    vec3 norm = normalize(v_Normal);
+    vec3 norm = normalize(fs_in.normal);
     // Get view direction from camera position - fragment position since we are in world space
-	vec3 viewDir = normalize(u_ViewPos - v_FragPos);
+	vec3 viewDir = normalize(u_ViewPos - fs_in.fragPos);
 
     // Calculate contribution from all light sources
     vec3 light = vec3(0.0);

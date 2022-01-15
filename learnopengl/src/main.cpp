@@ -312,8 +312,8 @@ int renderBackpackModel() {
     int nbFrames = 0;
 
     Model backpack("data/models/backpack/backpack.obj");
-    Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
-    // Shader bpShader("data/shaders/explode.vert", "data/shaders/basic.frag", "data/shaders/explode.geom");
+    // Shader bpShader("data/shaders/basic.vert", "data/shaders/basic.frag");
+    Shader bpShader("data/shaders/explode.vert", "data/shaders/basic.frag", "data/shaders/explode.geom");
     Shader normShader("data/shaders/normal_viz.vert", "data/shaders/normal_viz.frag", "data/shaders/normal_viz.geom");
     bpShader.Bind();
 
@@ -358,6 +358,7 @@ int renderBackpackModel() {
             renderer.Draw(backpack, bpShader);
         }
 
+        /*
         {
             // Draw normals
             normShader.Bind();
@@ -367,6 +368,7 @@ int renderBackpackModel() {
             normShader.SetUniformMatrix4f("u_InvTViewModel", glm::inverseTranspose(view * model));
             renderer.Draw(backpack, normShader);
         }
+        */
 
         // Swap buffers and check events
         window.SwapBuffers();
@@ -515,13 +517,13 @@ int renderDepthTestScene() {
 
     // Framebuffer related
     FrameBuffer fbo;
-    Texture screenTex(nullptr, SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::Attachment,
+    Texture screenTex(SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::TextureAttachment,
                       TextureOptions(TextureMinFilter::Linear, TextureMagFilter::Linear, false));
-    fbo.AddTextureAttachment(screenTex, 0);
+    fbo.AddColorAttachment(screenTex, 0);
     RenderBuffer rbo(RenderBufferType::Depth24Stencil8, SCREEN_WIDTH, SCREEN_HEIGHT);
     fbo.AddRenderBufferAttachment(AttachmentType::DepthStencil, rbo);
     if (!fbo.IsComplete()) {
-        spdlog::warn("[FrameBuffer Warn] FrameBuffer incompelete");
+        spdlog::warn("[FrameBuffer Warn] FrameBuffer incomplete");
     }
     screenShader.Bind();
     screenShader.SetUniform1i("u_ScreenTexture", 0);
@@ -1233,10 +1235,237 @@ int renderBlinnPhongLight() {
     return 0;
 }
 
+void renderShadowMappingScene(Renderer& renderer, Shader& shader, VertexArray& planeVAO, VertexArray& cubeVAO) {
+    // Draw floor
+    shader.SetUniformMatrix4f("u_Model", glm::mat4(1.0f));
+    renderer.Draw(planeVAO, 6);
+
+    // Draw cubes
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 1.5f, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 0.0f, 1.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.0f, 0.0f, 2.0));
+    model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    model = glm::scale(model, glm::vec3(0.25));
+    shader.SetUniformMatrix4f("u_Model", model);
+    shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    renderer.Draw(cubeVAO, 36);
+}
+
+int renderShadowMapping() {
+    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
+    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
+    Window window = app.GetWindow();
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+
+    // Initialize object vertices
+    // clang-format off
+    float planeVertices[] = {
+        // positions            // normals         // texcoords
+         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+        -25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,   0.0f,  0.0f,
+        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+
+         25.0f, -0.5f,  25.0f,  0.0f, 1.0f, 0.0f,  25.0f,  0.0f,
+        -25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,   0.0f, 25.0f,
+         25.0f, -0.5f, -25.0f,  0.0f, 1.0f, 0.0f,  25.0f, 25.0f
+    };
+    // clang-format on
+
+    VertexBuffer planeVBO(planeVertices, (unsigned int)sizeof(planeVertices));
+    VertexBufferLayout planeLayout;
+    planeLayout.Push<float>(3);
+    planeLayout.Push<float>(3);
+    planeLayout.Push<float>(2);
+    VertexArray planeVAO;
+    planeVAO.AddBuffer(planeVBO, planeLayout);
+
+    // clang-format off
+    float quadVertices[] = {
+		// positions        // texture Coords
+		-1.0f,  1.0f, 0.0f, 0.0f, 1.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+		 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+
+		 1.0f,  1.0f, 0.0f, 1.0f, 1.0f,
+		 1.0f, -1.0f, 0.0f, 1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f, 0.0f, 0.0f,
+	};
+    // clang-format on
+
+    VertexBuffer quadVBO(quadVertices, (unsigned int)sizeof(quadVertices));
+    VertexBufferLayout quadLayout;
+    quadLayout.Push<float>(3);
+    quadLayout.Push<float>(2);
+    VertexArray quadVAO;
+    quadVAO.AddBuffer(quadVBO, quadLayout);
+
+    // clang-format off
+    float cubeVertices[] = {
+        // back face
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+		// front face
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		// left face
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		// right face
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+		// bottom face
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		// top face
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+		 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+	};
+    // clang-format on
+
+    VertexBuffer cubeVBO(cubeVertices, (unsigned int)sizeof(cubeVertices));
+    VertexBufferLayout cubeLayout;
+    cubeLayout.Push<float>(3);
+    cubeLayout.Push<float>(3);
+    cubeLayout.Push<float>(2);
+    VertexArray cubeVAO;
+    cubeVAO.AddBuffer(cubeVBO, cubeLayout);
+
+    float nearPlane = 1.0f, farPlane = 7.5f;
+    glm::vec3 lightPosition(-2.0f, 4.0f, -1.0f);
+
+    Texture depthMap(SHADOW_WIDTH, SHADOW_HEIGHT, 0, TextureType::DepthAttachment,
+                     TextureOptions(TextureMinFilter::Nearest, TextureMagFilter::Nearest, TextureWrap::ClampToBorder,
+                                    TextureWrap::ClampToBorder, false, false, glm::vec4(1.0f)));
+    FrameBuffer depthMapFBO;
+    depthMapFBO.AddDepthAttachment(depthMap);
+    depthMapFBO.SetReadAndDrawBuffer(BufferValue::None);
+    depthMapFBO.Unbind();
+
+    Texture woodTex("data/textures/wood.png");
+    Shader depthShader("data/shaders/simple_depth.vert", "data/shaders/simple_depth.frag");
+    Shader shadowShader("data/shaders/shadow.vert", "data/shaders/shadow.frag");
+    shadowShader.Bind();
+    shadowShader.SetUniform1i("u_TextureDiffuse", 0);
+    shadowShader.SetUniform1i("u_ShadowMap", 1);
+    Shader debugShader("data/shaders/debug_depth.vert", "data/shaders/debug_depth.frag");
+    debugShader.Bind();
+    debugShader.SetUniform1i("u_DepthMap", 0);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+
+    while (!window.ShouldClose()) {
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        // We are doing directional light shadow mapping, so there is no need for perspective deform
+        glm::mat4 lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+        glm::mat4 lightView = glm::lookAt(lightPosition, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 lightSpaceMatrix = lightProjection * lightView;
+
+        {
+            depthShader.Bind();
+            depthShader.SetUniformMatrix4f("u_LightSpaceMatrix", lightSpaceMatrix);
+
+            // Render depth map from light's perspective
+            renderer.SetViewport(SHADOW_WIDTH, SHADOW_HEIGHT);
+            depthMap.Bind(0);
+            depthMapFBO.Bind();
+            renderer.Clear(ClearBit::Depth);
+            renderShadowMappingScene(renderer, depthShader, planeVAO, cubeVAO);
+            depthMapFBO.Unbind();
+
+            // Reset viewport
+            renderer.SetViewport(SCREEN_WIDTH, SCREEN_HEIGHT);
+            renderer.Clear();
+        }
+
+        {
+            glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), aspectRatio, 0.1f, 100.0f);
+            glm::mat4 view = camera.ViewMatrix();
+
+            woodTex.Bind(0);
+            depthMap.Bind(1);
+            shadowShader.Bind();
+            shadowShader.SetUniformMatrix4f("u_Projection", projection);
+            shadowShader.SetUniformMatrix4f("u_View", view);
+            shadowShader.SetUniform3f("u_ViewPos", camera.GetPosition());
+            shadowShader.SetUniform3f("u_LightPos", lightPosition);
+            shadowShader.SetUniformMatrix4f("u_LightSpaceMatrix", lightSpaceMatrix);
+            renderShadowMappingScene(renderer, shadowShader, planeVAO, cubeVAO);
+        }
+
+        /*
+        {
+            debugShader.Bind();
+            debugShader.SetUniform1f("u_Near", nearPlane);
+            debugShader.SetUniform1f("u_Far", farPlane);
+            depthMap.Bind(0);
+            renderer.Draw(quadVAO, 6);
+        }
+        */
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return renderBlinnPhongLight();
+    return renderBackpackModel();
 }

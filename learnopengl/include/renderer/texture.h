@@ -33,48 +33,66 @@ enum class TextureType {
     Specular,
     Normal,
     Height,
-    Attachment,
+    TextureAttachment,
+    DepthAttachment,
 };
 
 struct TextureOptions {
     TextureMinFilter MinFilter = TextureMinFilter::NearestMipMapLinear;
-    TextureMagFilter MaxFilter = TextureMagFilter::Linear;
+    TextureMagFilter MagFilter = TextureMagFilter::Linear;
     TextureWrap WrapS = TextureWrap::Repeat;
     TextureWrap WrapT = TextureWrap::Repeat;
     TextureWrap WrapR = TextureWrap::Repeat;
     bool GenerateMipMap = true;
+    bool GammaCorrection = false;
+    glm::vec4 BorderColor = glm::vec4(0.0f);
 
     TextureOptions() {}
 
-    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, TextureWrap ws, TextureWrap wt, TextureWrap wr,
-                   bool genMipMap = true) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter magF, TextureWrap ws, TextureWrap wt, TextureWrap wr,
+                   bool genMipMap = true, bool gammaCorrect = false, glm::vec4 borderColor = glm::vec4(0.0f)) {
         MinFilter = minF;
-        MaxFilter = maxF;
+        MagFilter = magF;
         WrapS = ws;
         WrapT = wt;
         WrapR = wr;
         GenerateMipMap = genMipMap;
+        GammaCorrection = gammaCorrect;
+        BorderColor = borderColor;
     }
 
-    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, TextureWrap ws, TextureWrap wt,
-                   bool genMipMap = true) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter magF, TextureWrap ws, TextureWrap wt, bool genMipMap = true,
+                   bool gammaCorrect = false, glm::vec4 borderColor = glm::vec4(0.0f)) {
         MinFilter = minF;
-        MaxFilter = maxF;
+        MagFilter = magF;
         WrapS = ws;
         WrapT = wt;
         GenerateMipMap = genMipMap;
+        GammaCorrection = gammaCorrect;
+        BorderColor = borderColor;
     }
 
-    TextureOptions(TextureWrap wrapS, TextureWrap wrapT, bool genMipMap = true) {
+    TextureOptions(TextureWrap wrapS, TextureWrap wrapT, bool genMipMap = true, bool gammaCorrect = false,
+                   glm::vec4 borderColor = glm::vec4(0.0f)) {
         WrapS = wrapS;
         WrapT = wrapT;
         GenerateMipMap = genMipMap;
+        GammaCorrection = gammaCorrect;
+        BorderColor = borderColor;
     }
 
-    TextureOptions(TextureMinFilter minF, TextureMagFilter maxF, bool genMipMap = true) {
+    TextureOptions(TextureMinFilter minF, TextureMagFilter magF, bool genMipMap = true, bool gammaCorrect = false,
+                   glm::vec4 borderColor = glm::vec4(0.0f)) {
         MinFilter = minF;
-        MaxFilter = maxF;
+        MagFilter = magF;
         GenerateMipMap = genMipMap;
+        GammaCorrection = gammaCorrect;
+        BorderColor = borderColor;
+    }
+
+    TextureOptions(bool genMipMap, bool gammaCorrect) {
+        GenerateMipMap = genMipMap;
+        GammaCorrection = gammaCorrect;
     }
 };
 
@@ -87,8 +105,8 @@ class Texture {
 
    public:
     Texture(const std::string& filePath, const TextureType type, const TextureOptions& options);
-    Texture(unsigned char* data, const unsigned int w, const unsigned int h, const unsigned int bpp,
-            const TextureType type, const TextureOptions& options);
+    Texture(const unsigned int w, const unsigned int h, const unsigned int bpp, const TextureType type,
+            const TextureOptions& options);
     ~Texture();
     // Helper constructors
     Texture(const std::string& filePath) : Texture(filePath, TextureType::Texture, TextureOptions()) {}
@@ -113,20 +131,30 @@ class Texture {
     inline unsigned int GetReferenceID() const {
         return m_ReferenceID;
     }
-
-   private:
-    void init(unsigned char* data, const TextureOptions& options);
 };
 
 class CubeMap {
    private:
     unsigned int m_ReferenceID;
     std::string m_FilePaths[6];
+    TextureType m_Type;
 
    public:
-    CubeMap(const std::string filePaths[6], const TextureOptions& options = TextureOptions());
+    CubeMap(const std::string filePaths[6], const TextureType = TextureType::Texture,
+            const TextureOptions& options = TextureOptions());
     ~CubeMap();
+    // Helper constructors
+    CubeMap(const std::string filePaths[6], const TextureOptions& options)
+        : CubeMap(filePaths, TextureType::Texture, options) {}
 
     void Bind(const unsigned int slot = 0, const bool activate = true) const;
     void Unbind() const;
+
+    inline TextureType GetType() const {
+        return m_Type;
+    }
+
+    inline unsigned int GetReferenceID() const {
+        return m_ReferenceID;
+    }
 };
