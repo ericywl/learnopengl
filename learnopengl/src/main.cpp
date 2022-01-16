@@ -1,7 +1,7 @@
 #include <common.h>
-#include <core/application.h>
 #include <core/input.h>
 #include <core/time.h>
+#include <core/window.h>
 #include <renderer/camera.h>
 #include <renderer/fbo.h>
 #include <renderer/ibo.h>
@@ -18,13 +18,10 @@
 #include <glm/gtc/matrix_inverse.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <iostream>
 #include <map>
 
 #define DEBUG
-
-const unsigned int SCREEN_WIDTH = 800;
-const unsigned int SCREEN_HEIGHT = 600;
-const double TARGET_FPS = 60.0;
 
 void processCameraInputs(Camera& camera, float deltaTime) {
     // WASD to control camera movement
@@ -68,12 +65,8 @@ void processWindowInputs(Window& window) {
     }
 }
 
-int testLightsAndCubes() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testLightsAndCubes(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // Cube vertices with 3 position, 3 normal and 2 texture coordinates
     // clang-format off
@@ -290,12 +283,8 @@ int testLightsAndCubes() {
     return 0;
 }
 
-int testBackpackModel() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testBackpackModel(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // Camera
     Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -378,12 +367,8 @@ int testBackpackModel() {
     return 0;
 }
 
-int testDepthTestScene() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testDepthTestScene(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // clang-format off
     float cubeVertices[] = {
@@ -517,10 +502,10 @@ int testDepthTestScene() {
 
     // Framebuffer related
     FrameBuffer fbo;
-    Texture screenTex(SCREEN_WIDTH, SCREEN_HEIGHT, 4, TextureType::TextureAttachment,
+    Texture screenTex(window.GetWidth(), window.GetHeight(), 4, TextureType::TextureAttachment,
                       TextureOptions(TextureMinFilter::Linear, TextureMagFilter::Linear, false));
     fbo.AddColorAttachment(screenTex, 0);
-    RenderBuffer rbo(RenderBufferType::Depth24Stencil8, SCREEN_WIDTH, SCREEN_HEIGHT);
+    RenderBuffer rbo(RenderBufferType::Depth24Stencil8, window.GetWidth(), window.GetHeight());
     fbo.AddRenderBufferAttachment(AttachmentType::DepthStencil, rbo);
     if (!fbo.IsComplete()) {
         spdlog::warn("[FrameBuffer Warn] FrameBuffer incomplete");
@@ -697,12 +682,8 @@ int testDepthTestScene() {
     return 0;
 }
 
-int testSkyBox() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testSkyBox(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // clang-format off
     float skyboxVertices[] = {
@@ -839,12 +820,8 @@ int testSkyBox() {
     return 0;
 }
 
-int testUniformBuffer() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testUniformBuffer(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // clang-format off
     float cubeVertices[] = {
@@ -958,12 +935,8 @@ int testUniformBuffer() {
     return 0;
 }
 
-int testInstancedQuads() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testInstancedQuads(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // clang-format off
     float quadVertices[] = {
@@ -1019,12 +992,8 @@ int testInstancedQuads() {
     return 0;
 }
 
-int testInstancedAsteroids() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testInstancedAsteroids(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     unsigned int amount = 100000;
     glm::mat4* modelMatrices = new glm::mat4[amount];
@@ -1135,12 +1104,8 @@ int testInstancedAsteroids() {
     return 0;
 }
 
-int testBlinnPhongLight() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
+int testBlinnPhongLight(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
     // clang-format off
     float planeVertices[] = {
@@ -1264,13 +1229,8 @@ void renderShadowMappingScene(Renderer& renderer, Shader& shader, VertexArray& p
     renderer.Draw(cubeVAO, 36);
 }
 
-int testShadowMapping() {
-    float aspectRatio = (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT;
-    Application app(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL");
-    Window window = app.GetWindow();
-    window.SetVSync(true);
-    window.SetInputSystem(true);
-
+int testShadowMapping(Window& window) {
+    float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
     const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
 
     // Initialize object vertices
@@ -1418,7 +1378,7 @@ int testShadowMapping() {
             depthShader.SetUniformMatrix4f("u_LightSpaceMatrix", lightSpaceMatrix);
 
             // Render depth map from light's perspective
-            renderer.SetViewport(SHADOW_WIDTH, SHADOW_HEIGHT);
+            window.SetViewport(SHADOW_WIDTH, SHADOW_HEIGHT);
             depthMap.Bind(0);
             depthMapFBO.Bind();
             renderer.Clear(ClearBit::Depth);
@@ -1426,7 +1386,7 @@ int testShadowMapping() {
             depthMapFBO.Unbind();
 
             // Reset viewport
-            renderer.SetViewport(SCREEN_WIDTH, SCREEN_HEIGHT);
+            window.SetViewport(window.GetWidth(), window.GetHeight());
             renderer.Clear();
         }
 
@@ -1462,10 +1422,264 @@ int testShadowMapping() {
     return 0;
 }
 
+void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArray& cubeVAO, bool invTModel = true) {
+    // Render room
+    glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
+    shader.Bind();
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    // Disable face cull to render a cube room (looking at inside of cube)
+    renderer.SetFaceCulling(false);
+    shader.SetUniform1i("u_ReverseNormals", 1);
+    renderer.Draw(cubeVAO, 36);
+    shader.SetUniform1i("u_ReverseNormals", 0);
+    renderer.SetFaceCulling(true);
+
+    // Render cubes
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(4.0f, -3.5f, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
+    model = glm::scale(model, glm::vec3(0.75f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
+    model = glm::scale(model, glm::vec3(0.5f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    renderer.Draw(cubeVAO, 36);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
+    model = glm::rotate(model, glm::radians(60.0f), glm::normalize(glm::vec3(1.0, 0.0, 1.0)));
+    model = glm::scale(model, glm::vec3(0.75f));
+    shader.SetUniformMatrix4f("u_Model", model);
+    if (invTModel) {
+        shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+    }
+    renderer.Draw(cubeVAO, 36);
+}
+
+int testOmniShadowMapping(Window& window) {
+    // clang-format off
+    float vertices[] = {
+		// back face
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+		// front face
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		// left face
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		// right face
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+		// bottom face
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		// top face
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+		 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+	};
+    // clang-format on
+
+    VertexBuffer cubeVBO(vertices, (unsigned int)sizeof(vertices));
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+    layout.Push<float>(2);
+    VertexArray cubeVAO;
+    cubeVAO.AddBuffer(cubeVBO, layout);
+
+    const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+
+    CubeMap depthCubeMap(SHADOW_WIDTH, SHADOW_HEIGHT, TextureType::DepthAttachment,
+                         TextureOptions(TextureMinFilter::Nearest, TextureMagFilter::Nearest, TextureWrap::ClampToEdge,
+                                        TextureWrap::ClampToEdge, TextureWrap::ClampToEdge));
+    FrameBuffer depthMapFBO;
+    depthMapFBO.AddCubeDepthAttachment(depthCubeMap);
+    depthMapFBO.SetReadAndDrawBuffer(BufferValue::None);
+    if (!depthMapFBO.IsComplete()) {
+        spdlog::warn("[FrameBuffer Warn] FrameBuffer incomplete");
+    }
+    depthMapFBO.Unbind();
+
+    Texture woodTex("data/textures/wood.png");
+    Shader shadowShader("data/shaders/omni_shadow.vert", "data/shaders/omni_shadow.frag");
+    Shader depthShader("data/shaders/omni_simple_depth.vert", "data/shaders/omni_simple_depth.frag",
+                       "data/shaders/omni_simple_depth.geom");
+    Shader lightShader("data/shaders/basic.vert", "data/shaders/light.frag");
+
+    lightShader.Bind();
+    lightShader.SetUniform3f("u_LightColor", 1.0f, 1.0f, 1.0f);
+
+    shadowShader.Bind();
+    shadowShader.SetUniform1i("u_TextureDiffuse", 0);
+    shadowShader.SetUniform1i("u_DepthMap", 1);
+
+    glm::vec3 lightPosition(0.0f);
+    float nearPlane = 1.0f;
+    float farPlane = 25.0f;
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+    renderer.SetFaceCulling(true);
+
+    while (!window.ShouldClose()) {
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+        lightPosition.z = static_cast<float>(sin(Time::GetTime() * 0.5) * 3.0);
+
+        {
+            // Render to shadow map
+            glm::mat4 shadowProjection =
+                glm::perspective(glm::radians(90.0f), (float)SHADOW_WIDTH / (float)SHADOW_HEIGHT, nearPlane, farPlane);
+            std::vector<glm::mat4> shadowTransforms;
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(1.0f, 0.0f, 0.0f),
+                                                                      glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(-1.0f, 0.0f, 0.0f),
+                                                                      glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(0.0f, 1.0f, 0.0f),
+                                                                      glm::vec3(0.0f, 0.0f, 1.0f)));
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(0.0f, -1.0f, 0.0f),
+                                                                      glm::vec3(0.0f, 0.0f, -1.0f)));
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(0.0f, 0.0f, 1.0f),
+                                                                      glm::vec3(0.0f, -1.0f, 0.0f)));
+            shadowTransforms.push_back(shadowProjection * glm::lookAt(lightPosition,
+                                                                      lightPosition + glm::vec3(0.0f, 0.0f, -1.0f),
+                                                                      glm::vec3(0.0f, -1.0f, 0.0f)));
+
+            depthMapFBO.Bind();
+            depthShader.Bind();
+            depthShader.SetUniform1f("u_FarPlane", farPlane);
+            depthShader.SetUniform3f("u_LightPos", lightPosition);
+            for (unsigned int i = 0; i < 6; i++) {
+                depthShader.SetUniformMatrix4f("u_ShadowMatrices[" + std::to_string(i) + "]", shadowTransforms[i]);
+            }
+
+            window.SetViewport(SHADOW_WIDTH, SHADOW_HEIGHT);
+            renderer.Clear(ClearBit::Depth);
+
+            renderOmniShadowMappingScene(renderer, depthShader, cubeVAO, false);
+            depthMapFBO.Unbind();
+
+            // Reset viewport
+            window.SetViewport(window.GetWidth(), window.GetHeight());
+            renderer.Clear();
+        }
+
+        {
+            // Render normal scene
+            glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()),
+                                                    (float)window.GetWidth() / (float)window.GetHeight(), 0.1f, 100.0f);
+            glm::mat4 view = camera.ViewMatrix();
+
+            {
+                // Render light cube for visual purpose
+                glm::mat4 model = glm::translate(glm::mat4(1.0f), lightPosition);
+                model = glm::scale(model, glm::vec3(0.05f));
+                lightShader.Bind();
+                lightShader.SetUniformMatrix4f("u_Projection", projection);
+                lightShader.SetUniformMatrix4f("u_View", view);
+                lightShader.SetUniformMatrix4f("u_Model", model);
+                renderer.Draw(cubeVAO, 36);
+            }
+
+            shadowShader.Bind();
+            shadowShader.SetUniformMatrix4f("u_Projection", projection);
+            shadowShader.SetUniformMatrix4f("u_View", view);
+            shadowShader.SetUniform3f("u_ViewPos", camera.GetPosition());
+            shadowShader.SetUniform3f("u_LightPos", lightPosition);
+            shadowShader.SetUniform1f("u_FarPlane", farPlane);
+
+            woodTex.Bind(0);
+            depthCubeMap.Bind(1);
+            renderOmniShadowMappingScene(renderer, shadowShader, cubeVAO);
+        }
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
 int main() {
 #ifdef DEBUG
     spdlog::set_level(spdlog::level::debug);
 #endif
 
-    return testShadowMapping();
+    const unsigned int SCREEN_WIDTH = 800;
+    const unsigned int SCREEN_HEIGHT = 600;
+
+    Window window(SCREEN_WIDTH, SCREEN_HEIGHT, "Learn OpenGL");
+    window.SetVSync(true);
+    window.SetInputSystem(true);
+
+    return testOmniShadowMapping(window);
 }

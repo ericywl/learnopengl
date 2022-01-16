@@ -119,13 +119,26 @@ CubeMap::CubeMap(const std::string filePaths[6], const TextureType type, const T
         stbi_image_free(data);
     }
 
-    // Generate mip-map
     if (options.GenerateMipMap) {
         glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
     }
 
-    // Unbind texture and free the local buffer
-    glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+    Unbind();
+}
+
+CubeMap::CubeMap(const unsigned int w, const unsigned int h, const TextureType type, const TextureOptions& options) {
+    X v = texInit(GL_TEXTURE_CUBE_MAP, &m_ReferenceID, type, options);
+
+    for (unsigned int i = 0; i < 6; i++) {
+        glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, v.internalFormat, w, h, 0, v.externalFormat, v.dataType,
+                     nullptr);
+    }
+
+    if (options.GenerateMipMap) {
+        glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+    }
+
+    Unbind();
 }
 
 CubeMap::~CubeMap() {

@@ -142,6 +142,7 @@ class CubeMap {
    public:
     CubeMap(const std::string filePaths[6], const TextureType = TextureType::Texture,
             const TextureOptions& options = TextureOptions());
+    CubeMap(const unsigned int w, const unsigned int h, const TextureType type, const TextureOptions& options);
     ~CubeMap();
     // Helper constructors
     CubeMap(const std::string filePaths[6], const TextureOptions& options)

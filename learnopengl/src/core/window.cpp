@@ -1,13 +1,113 @@
 #include <common.h>
 #include <core/window.h>
 
+#include <iostream>
 #include <stdexcept>
 
+/* GLMessageCallback should get called whenever OpenGL encounters some error, which then prints out the error message in
+ * some simple formatting */
+void GLAPIENTRY GLMessageCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
+                                  const GLchar *message, const void *userParam) {
+    // Ignore non-significant error/warning codes
+    if (id == 131169 || id == 131185 || id == 131218 || id == 131204) return;
+
+    std::stringstream ss;
+    ss << "[OpenGL Error " << id << "] " << message << '\n';
+
+    switch (source) {
+        case GL_DEBUG_SOURCE_API:
+            ss << " | Source: API";
+            break;
+        case GL_DEBUG_SOURCE_WINDOW_SYSTEM:
+            ss << " | Source: Window System";
+            break;
+        case GL_DEBUG_SOURCE_SHADER_COMPILER:
+            ss << " | Source: Shader Compiler";
+            break;
+        case GL_DEBUG_SOURCE_THIRD_PARTY:
+            ss << " | Source: Third Party";
+            break;
+        case GL_DEBUG_SOURCE_APPLICATION:
+            ss << " | Source: Application";
+            break;
+        default:
+            ss << " | Source: Other";
+            break;
+    }
+
+    switch (type) {
+        case GL_DEBUG_TYPE_ERROR:
+            ss << " | Type: Error";
+            break;
+        case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR:
+            ss << " | Type: Deprecated Behaviour";
+            break;
+        case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR:
+            ss << " | Type: Undefined Behaviour";
+            break;
+        case GL_DEBUG_TYPE_PORTABILITY:
+            ss << " | Type: Portability";
+            break;
+        case GL_DEBUG_TYPE_PERFORMANCE:
+            ss << " | Type: Performance";
+            break;
+        case GL_DEBUG_TYPE_MARKER:
+            ss << " | Type: Marker";
+            break;
+        case GL_DEBUG_TYPE_PUSH_GROUP:
+            ss << " | Type: Push Group";
+            break;
+        case GL_DEBUG_TYPE_POP_GROUP:
+            ss << " | Type: Pop Group";
+            break;
+        default:
+            ss << " | Type: Other";
+            break;
+    }
+
+    switch (severity) {
+        case GL_DEBUG_SEVERITY_HIGH:
+            spdlog::critical(ss.str());
+            break;
+        case GL_DEBUG_SEVERITY_MEDIUM:
+            spdlog::error(ss.str());
+            break;
+        case GL_DEBUG_SEVERITY_LOW:
+            spdlog::warn(ss.str());
+            break;
+        case GL_DEBUG_SEVERITY_NOTIFICATION:
+            spdlog::info(ss.str());
+            break;
+        default:
+            spdlog::debug(ss.str());
+            break;
+    }
+}
+
+void GLFWErrorCallback(int, const char *errStr) {
+    spdlog::error("[GLFW Error] {}", errStr);
+}
+
 void GLFWFrameBufferSizeCallback(GLFWwindow *window, int width, int height) {
-    glViewport(0, 0, width, height);
+    Window *w = static_cast<Window *>(glfwGetWindowUserPointer(window));
+    w->SetSize({width, height});
+    w->SetViewport(width, height);
 }
 
 Window::Window(const int width, const int height, const std::string &name) {
+    // Initialize the library
+    if (!glfwInit()) {
+        spdlog::critical("[GLFW Error] Failed to initialize GLFW");
+        throw std::runtime_error("Failed to initialize GLFW");
+    };
+
+    // Set GLFW initialization values and error callback
+    glfwSetErrorCallback(GLFWErrorCallback);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
+    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 6);
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
+    glfwWindowHint(GLFW_OPENGL_DEBUG_CONTEXT, true);
+
     // Create a window and its OpenGL context
     GLFWwindow *w = glfwCreateWindow(width, height, name.c_str(), NULL, NULL);
     if (!w) {
@@ -17,7 +117,7 @@ Window::Window(const int width, const int height, const std::string &name) {
 
     // Make the w's context current
     glfwMakeContextCurrent(w);
-    glfwSetWindowUserPointer(w, this);
+    glfwSetWindowUserPointer(w, static_cast<void *>(this));
 
     // Initialize GLAD after making context
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
@@ -25,17 +125,28 @@ Window::Window(const int width, const int height, const std::string &name) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
 
+    spdlog::info("GL version: {}", glGetString(GL_VERSION));
+
+    // Enable OpenGL debug message callback
+    glEnable(GL_DEBUG_OUTPUT);
+    glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS);
+    glDebugMessageControl(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+    glDebugMessageCallback(GLMessageCallback, NULL);
+
     // Set viewport
     glViewport(0, 0, width, height);
     glfwSetFramebufferSizeCallback(w, GLFWFrameBufferSizeCallback);
 
     m_Window = w;
     m_Monitor = glfwGetPrimaryMonitor();
-    fetchWindowSizeAndPosition();
+    m_Size = {width, height};
+    fetchRestoreWindowSizeAndPosition();
 }
 
 Window::~Window() {
+    spdlog::debug("Window destroyed");
     glfwDestroyWindow(m_Window);
+    glfwTerminate();
 }
 
 bool Window::ShouldClose() const {
@@ -62,19 +173,22 @@ bool Window::IsFullScreen() const {
 }
 
 void Window::ToggleFullScreen() {
-    bool fullscreen = !IsFullScreen();
-
-    if (fullscreen) {
+    if (!IsFullScreen()) {
         // Backup window position and window size
-        fetchWindowSizeAndPosition();
+        fetchRestoreWindowSizeAndPosition();
         // Get monitor resolution
         const GLFWvidmode *mode = glfwGetVideoMode(m_Monitor);
         // Switch to full screen
         glfwSetWindowMonitor(m_Window, m_Monitor, 0, 0, mode->width, mode->height, mode->refreshRate);
     } else {
         // Restore last window size and position
-        glfwSetWindowMonitor(m_Window, nullptr, m_Position.first, m_Position.second, m_Size.first, m_Size.second, 0);
+        glfwSetWindowMonitor(m_Window, nullptr, m_RestoredPosition.first, m_RestoredPosition.second,
+                             m_RestoredSize.first, m_RestoredSize.second, 0);
     }
+}
+
+void Window::SetViewport(int width, int height) {
+    glViewport(0, 0, width, height);
 }
 
 void Window::SetVSync(bool on) {
@@ -113,7 +227,7 @@ void Window::SetMSAASamples(unsigned int samples) {
     glfwWindowHint(GLFW_SAMPLES, samples);
 }
 
-void Window::fetchWindowSizeAndPosition() {
-    glfwGetWindowPos(m_Window, &m_Position.first, &m_Position.second);
-    glfwGetWindowSize(m_Window, &m_Size.first, &m_Size.second);
+void Window::fetchRestoreWindowSizeAndPosition() {
+    glfwGetWindowPos(m_Window, &m_RestoredPosition.first, &m_RestoredPosition.second);
+    glfwGetWindowSize(m_Window, &m_RestoredSize.first, &m_RestoredSize.second);
 }

@@ -92,10 +92,6 @@ void Renderer::SetGammaCorrection(bool on) const {
     }
 }
 
-void Renderer::SetViewport(int width, int height) const {
-    glViewport(0, 0, width, height);
-}
-
 void Renderer::SetDepthTest(bool on) const {
     if (on) {
         glEnable(GL_DEPTH_TEST);

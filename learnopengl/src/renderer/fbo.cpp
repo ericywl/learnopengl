@@ -27,6 +27,10 @@ void FrameBuffer::AddDepthAttachment(const Texture& tex, const int level) const 
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, tex.GetReferenceID(), level);
 }
 
+void FrameBuffer::AddCubeDepthAttachment(const CubeMap& cm, const int level) const {
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, cm.GetReferenceID(), level);
+}
+
 void FrameBuffer::AddRenderBufferAttachment(const AttachmentType type, const RenderBuffer& rb) const {
     glFramebufferRenderbuffer(GL_FRAMEBUFFER, static_cast<GLenum>(type), GL_RENDERBUFFER, rb.GetReferenceID());
 }

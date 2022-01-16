@@ -24,6 +24,7 @@ class FrameBuffer {
 
     void AddColorAttachment(const Texture &tex, const unsigned int slot = 0, const int level = 0) const;
     void AddDepthAttachment(const Texture &tex, const int level = 0) const;
+    void AddCubeDepthAttachment(const CubeMap &cm, const int level = 0) const;
     void AddRenderBufferAttachment(const AttachmentType type, const RenderBuffer &rb) const;
 
     void SetReadBuffer(const BufferValue val) const;
