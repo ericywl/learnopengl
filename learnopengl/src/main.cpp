@@ -65,6 +65,151 @@ void processWindowInputs(Window& window) {
     }
 }
 
+struct VertexData {
+    std::shared_ptr<VertexArray> va;
+    std::shared_ptr<VertexBuffer> vb;
+    unsigned int count;
+};
+
+VertexData initQuad() {
+    // positions
+    glm::vec3 pos1(-1.0f, 1.0f, 0.0f);
+    glm::vec3 pos2(-1.0f, -1.0f, 0.0f);
+    glm::vec3 pos3(1.0f, -1.0f, 0.0f);
+    glm::vec3 pos4(1.0f, 1.0f, 0.0f);
+    // texture coordinates
+    glm::vec2 uv1(0.0f, 1.0f);
+    glm::vec2 uv2(0.0f, 0.0f);
+    glm::vec2 uv3(1.0f, 0.0f);
+    glm::vec2 uv4(1.0f, 1.0f);
+    // normal vector
+    glm::vec3 nm(0.0f, 0.0f, 1.0f);
+
+    // calculate tangent / bitangent vectors of both triangles
+    glm::vec3 tangent1, bitangent1;
+    glm::vec3 tangent2, bitangent2;
+
+    // triangle 1
+    // ----------
+    glm::vec3 edge1 = pos2 - pos1;
+    glm::vec3 edge2 = pos3 - pos1;
+    glm::vec2 deltaUV1 = uv2 - uv1;
+    glm::vec2 deltaUV2 = uv3 - uv1;
+
+    float f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+    tangent1.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+    tangent1.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+    tangent1.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+    bitangent1.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+    bitangent1.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+    bitangent1.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+    // triangle 2
+    // ----------
+    edge1 = pos3 - pos1;
+    edge2 = pos4 - pos1;
+    deltaUV1 = uv3 - uv1;
+    deltaUV2 = uv4 - uv1;
+
+    f = 1.0f / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+
+    tangent2.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+    tangent2.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+    tangent2.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+
+    bitangent2.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+    bitangent2.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+    bitangent2.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+
+    // clang-format off
+    float quadVertices[] = {
+		// positions            // normal         // texcoords  // tangent                          // bitangent
+		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+		pos2.x, pos2.y, pos2.z, nm.x, nm.y, nm.z, uv2.x, uv2.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent1.x, tangent1.y, tangent1.z, bitangent1.x, bitangent1.y, bitangent1.z,
+
+		pos1.x, pos1.y, pos1.z, nm.x, nm.y, nm.z, uv1.x, uv1.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+		pos3.x, pos3.y, pos3.z, nm.x, nm.y, nm.z, uv3.x, uv3.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z,
+		pos4.x, pos4.y, pos4.z, nm.x, nm.y, nm.z, uv4.x, uv4.y, tangent2.x, tangent2.y, tangent2.z, bitangent2.x, bitangent2.y, bitangent2.z
+	};
+    // clang-format on
+
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+    layout.Push<float>(2);
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+
+    std::shared_ptr<VertexBuffer> vb = std::make_shared<VertexBuffer>(quadVertices, (unsigned int)sizeof(quadVertices));
+    std::shared_ptr<VertexArray> va = std::make_shared<VertexArray>();
+    va->AddBuffer(*vb, layout);
+
+    return VertexData{va, vb, 6};
+}
+
+VertexData initCube() {
+    // clang-format off
+    float cubeVertices[] = {
+        // back face
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
+		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
+		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
+		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
+		// front face
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
+		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
+		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
+		// left face
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
+		// right face
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
+		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
+		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
+		// bottom face
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
+		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
+		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
+		// top face
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
+		 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
+		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
+		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
+	};
+    // clang-format on
+
+    VertexBufferLayout layout;
+    layout.Push<float>(3);
+    layout.Push<float>(3);
+    layout.Push<float>(2);
+
+    std::shared_ptr<VertexBuffer> vb = std::make_shared<VertexBuffer>(cubeVertices, (unsigned int)sizeof(cubeVertices));
+    std::shared_ptr<VertexArray> va = std::make_shared<VertexArray>();
+    va->AddBuffer(*vb, layout);
+
+    return VertexData{va, vb, 36};
+}
+
 int testLightsAndCubes(Window& window) {
     float aspectRatio = (float)window.GetWidth() / (float)window.GetHeight();
 
@@ -1422,7 +1567,7 @@ int testShadowMapping(Window& window) {
     return 0;
 }
 
-void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArray& cubeVAO, bool invTModel = true) {
+void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexData& cubeData, bool invTModel = true) {
     // Render room
     glm::mat4 model = glm::scale(glm::mat4(1.0f), glm::vec3(5.0f));
     shader.Bind();
@@ -1433,7 +1578,7 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     // Disable face cull to render a cube room (looking at inside of cube)
     renderer.SetFaceCulling(false);
     shader.SetUniform1i("u_ReverseNormals", 1);
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
     shader.SetUniform1i("u_ReverseNormals", 0);
     renderer.SetFaceCulling(true);
 
@@ -1445,7 +1590,7 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     if (invTModel) {
         shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
     }
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(2.0f, 3.0f, 1.0));
@@ -1454,7 +1599,7 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     if (invTModel) {
         shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
     }
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-3.0f, -1.0f, 0.0));
@@ -1463,7 +1608,7 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     if (invTModel) {
         shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
     }
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.5f, 1.0f, 1.5));
@@ -1472,7 +1617,7 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     if (invTModel) {
         shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
     }
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(-1.5f, 2.0f, -3.0));
@@ -1482,66 +1627,13 @@ void renderOmniShadowMappingScene(Renderer& renderer, Shader& shader, VertexArra
     if (invTModel) {
         shader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
     }
-    renderer.Draw(cubeVAO, 36);
+    renderer.Draw(*cubeData.va, cubeData.count);
 }
 
 int testOmniShadowMapping(Window& window) {
-    // clang-format off
-    float vertices[] = {
-		// back face
-		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-		 1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 0.0f, // bottom-right         
-		 1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 1.0f, 1.0f, // top-right
-		-1.0f, -1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 0.0f, // bottom-left
-		-1.0f,  1.0f, -1.0f,  0.0f,  0.0f, -1.0f, 0.0f, 1.0f, // top-left
-		// front face
-		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-		 1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 0.0f, // bottom-right
-		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-		 1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 1.0f, 1.0f, // top-right
-		-1.0f,  1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 1.0f, // top-left
-		-1.0f, -1.0f,  1.0f,  0.0f,  0.0f,  1.0f, 0.0f, 0.0f, // bottom-left
-		// left face
-		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-		-1.0f,  1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-left
-		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-		-1.0f, -1.0f, -1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-left
-		-1.0f, -1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-		-1.0f,  1.0f,  1.0f, -1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-right
-		// right face
-		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		 1.0f,  1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 1.0f, // top-right         
-		 1.0f, -1.0f, -1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 1.0f, // bottom-right
-		 1.0f,  1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 1.0f, 0.0f, // top-left
-		 1.0f, -1.0f,  1.0f,  1.0f,  0.0f,  0.0f, 0.0f, 0.0f, // bottom-left     
-		// bottom face
-		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-		 1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 1.0f, // top-left
-		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-		 1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 1.0f, 0.0f, // bottom-left
-		-1.0f, -1.0f,  1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 0.0f, // bottom-right
-		-1.0f, -1.0f, -1.0f,  0.0f, -1.0f,  0.0f, 0.0f, 1.0f, // top-right
-		// top face
-		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-		 1.0f,  1.0f , 1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-		 1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 1.0f, // top-right     
-		 1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 1.0f, 0.0f, // bottom-right
-		-1.0f,  1.0f, -1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 1.0f, // top-left
-		-1.0f,  1.0f,  1.0f,  0.0f,  1.0f,  0.0f, 0.0f, 0.0f  // bottom-left        
-	};
-    // clang-format on
-
-    VertexBuffer cubeVBO(vertices, (unsigned int)sizeof(vertices));
-    VertexBufferLayout layout;
-    layout.Push<float>(3);
-    layout.Push<float>(3);
-    layout.Push<float>(2);
-    VertexArray cubeVAO;
-    cubeVAO.AddBuffer(cubeVBO, layout);
-
     const unsigned int SHADOW_WIDTH = 2048, SHADOW_HEIGHT = 2048;
+
+    VertexData cubeData = initCube();
 
     CubeMap depthCubeMap(SHADOW_WIDTH, SHADOW_HEIGHT, TextureType::DepthAttachment,
                          TextureOptions(TextureMinFilter::Nearest, TextureMagFilter::Nearest, TextureWrap::ClampToEdge,
@@ -1625,7 +1717,7 @@ int testOmniShadowMapping(Window& window) {
             window.SetViewport(SHADOW_WIDTH, SHADOW_HEIGHT);
             renderer.Clear(ClearBit::Depth);
 
-            renderOmniShadowMappingScene(renderer, depthShader, cubeVAO, false);
+            renderOmniShadowMappingScene(renderer, depthShader, cubeData, false);
             depthMapFBO.Unbind();
 
             // Reset viewport
@@ -1647,7 +1739,7 @@ int testOmniShadowMapping(Window& window) {
                 lightShader.SetUniformMatrix4f("u_Projection", projection);
                 lightShader.SetUniformMatrix4f("u_View", view);
                 lightShader.SetUniformMatrix4f("u_Model", model);
-                renderer.Draw(cubeVAO, 36);
+                renderer.Draw(*cubeData.va, cubeData.count);
             }
 
             shadowShader.Bind();
@@ -1659,7 +1751,88 @@ int testOmniShadowMapping(Window& window) {
 
             woodTex.Bind(0);
             depthCubeMap.Bind(1);
-            renderOmniShadowMappingScene(renderer, shadowShader, cubeVAO);
+            renderOmniShadowMappingScene(renderer, shadowShader, cubeData);
+        }
+
+        window.SwapBuffers();
+        window.PollEvents();
+    }
+
+    return 0;
+}
+
+int testNormalMapping(Window& window) {
+    VertexData quadData = initQuad();
+    VertexData cubeData = initCube();
+
+    Texture brickDiffuse("data/textures/brickwall.jpg",
+                         TextureOptions{TextureWrap::ClampToEdge, TextureWrap::ClampToEdge});
+    Texture brickNormal("data/textures/brickwall_normal.jpg",
+                        TextureOptions{TextureWrap::ClampToEdge, TextureWrap::ClampToEdge});
+
+    Shader objShader("data/shaders/normal_mapping.vert", "data/shaders/normal_mapping.frag");
+    Shader lightShader("data/shaders/basic.vert", "data/shaders/light.frag");
+
+    // Activate textures (not changing per frame)
+    brickDiffuse.Bind(0);
+    brickNormal.Bind(1);
+
+    // Set shader uniforms
+    lightShader.Bind();
+    lightShader.SetUniform3f("u_LightColor", 1.0f, 1.0f, 1.0f);
+    objShader.Bind();
+    objShader.SetUniform1i("u_DiffuseMap", 0);
+    objShader.SetUniform1i("u_NormalMap", 1);
+
+    // Camera
+    Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+    double deltaTime = 0.0;  // Time between current frame and last frame
+    double lastTime = 0.0;   // Time of last frame
+
+    glm::vec3 lightPos(0.5f, 1.5f, 0.3f);
+
+    Renderer renderer;
+    renderer.SetDepthTest(true);
+
+    while (!window.ShouldClose()) {
+        double currentTime = Time::GetTime();
+        deltaTime = currentTime - lastTime;
+        lastTime = currentTime;
+
+        renderer.Clear();
+        processWindowInputs(window);
+        processCameraInputs(camera, (float)deltaTime);
+
+        glm::mat4 projection = glm::perspective(glm::radians(camera.GetZoom()), window.GetAspectRatio(), 0.1f, 100.0f);
+        glm::mat4 view = camera.ViewMatrix();
+
+        {
+            // Render the light cube
+            glm::mat4 model = glm::translate(glm::mat4(1.0f), lightPos);
+            model = glm::scale(model, glm::vec3(0.03f));
+
+            lightShader.Bind();
+            lightShader.SetUniformMatrix4f("u_Projection", projection);
+            lightShader.SetUniformMatrix4f("u_View", view);
+            lightShader.SetUniformMatrix4f("u_Model", model);
+
+            renderer.Draw(*cubeData.va, cubeData.count);
+        }
+
+        {
+            // Rotate the quad to show normal mapping from multiple directions
+            glm::mat4 model = glm::rotate(glm::mat4(1.0f), glm::radians((float)Time::GetTime() * -10.0f),
+                                          glm::normalize(glm::vec3(1.0f, 0.0f, 1.0f)));
+
+            objShader.Bind();
+            objShader.SetUniformMatrix4f("u_Model", model);
+            objShader.SetUniformMatrix4f("u_View", view);
+            objShader.SetUniformMatrix4f("u_Projection", projection);
+            objShader.SetUniformMatrix4f("u_InvTModel", glm::inverseTranspose(model));
+            objShader.SetUniform3f("u_LightPos", lightPos);
+            objShader.SetUniform3f("u_ViewPos", camera.GetPosition());
+
+            renderer.Draw(*quadData.va, quadData.count);
         }
 
         window.SwapBuffers();
@@ -1681,5 +1854,5 @@ int main() {
     window.SetVSync(true);
     window.SetInputSystem(true);
 
-    return testOmniShadowMapping(window);
+    return testNormalMapping(window);
 }

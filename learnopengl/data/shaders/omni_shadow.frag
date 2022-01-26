@@ -15,11 +15,32 @@ uniform float u_FarPlane;
 
 float ShadowCalculation(vec3 fragPos) {
 	vec3 fragToLight = fragPos - u_LightPos;
-	float closestDepth = texture(u_DepthMap, fragToLight).r * u_FarPlane;
 	float currentDepth = length(fragToLight);
 
-	float bias = 0.05;
-	return currentDepth - bias > closestDepth ? 1.0 : 0.0;
+	// Apply PCF with some offset directions
+	vec3 sampleOffsetDirections[20] = vec3[]
+	(
+	   vec3( 1,  1,  1), vec3( 1, -1,  1), vec3(-1, -1,  1), vec3(-1,  1,  1), 
+	   vec3( 1,  1, -1), vec3( 1, -1, -1), vec3(-1, -1, -1), vec3(-1,  1, -1),
+	   vec3( 1,  1,  0), vec3( 1, -1,  0), vec3(-1, -1,  0), vec3(-1,  1,  0),
+	   vec3( 1,  0,  1), vec3(-1,  0,  1), vec3( 1,  0, -1), vec3(-1,  0, -1),
+	   vec3( 0,  1,  1), vec3( 0, -1,  1), vec3( 0, -1, -1), vec3( 0,  1, -1)
+	); 
+
+	float bias = 0.15;
+	int samples = 20;
+	// Scale disk radius based on the distance from view to fragment
+	float viewDist = length(u_ViewPos - fragPos);
+	float diskRadius = (1.0 + (viewDist / u_FarPlane)) / 25.0;
+	float shadow = 0.0;
+	for (int i = 0; i < samples; i++) {
+		float closestDepth = texture(u_DepthMap, fragToLight + sampleOffsetDirections[i] * diskRadius).r * u_FarPlane;
+		if (currentDepth - bias > closestDepth) {
+			shadow += 1.0;
+		}
+	}
+
+	return shadow / float(samples);
 }
 
 void main() {

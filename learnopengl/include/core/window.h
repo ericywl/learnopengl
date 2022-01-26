@@ -41,6 +41,10 @@ class Window {
         return m_Size.second;
     }
 
+    inline float GetAspectRatio() const {
+        return (float)GetWidth() / (float)GetHeight();
+    }
+
     inline void SetSize(std::pair<int, int> size) {
         m_Size = size;
     }
